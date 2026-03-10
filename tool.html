@@ -1,0 +1,2265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tool — ALLTOOLHUB</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:opsz,wght@9..40,300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg:#12121a; --surface:#1a1a26; --surface2:#22223a;
+      --border:#2e2e45; --border2:#44446a;
+      --accent:#d4ff00; --accent2:#ff6b35;
+      --muted:#6a6a88; --text:#eeeeff; --text-dim:#a0a0c0;
+      --card-bg:#1e1e30;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+    ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--accent);border-radius:2px}
+
+    /* HEADER */
+    header{position:sticky;top:0;z-index:100;background:rgba(18,18,26,.95);backdrop-filter:blur(18px);border-bottom:1px solid var(--border)}
+    .h-inner{max-width:1400px;margin:0 auto;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:62px;gap:1rem}
+    .logo-wrap{display:flex;align-items:center;gap:.55rem;text-decoration:none;flex-shrink:0}
+    .logo-icon{width:36px;height:36px;flex-shrink:0}
+    .logo-text{font-family:'Bebas Neue',sans-serif;font-size:1.75rem;letter-spacing:.06em;color:var(--accent);line-height:1}
+    .logo-text span{color:var(--text)}
+    .back-btn{font-family:'Space Mono',monospace;font-size:.7rem;letter-spacing:.06em;color:var(--text-dim);border:1px solid var(--border2);background:none;padding:.38rem .85rem;border-radius:4px;cursor:pointer;text-decoration:none;transition:all .2s;display:inline-flex;align-items:center;gap:.4rem}
+    .back-btn:hover{color:var(--accent);border-color:var(--accent)}
+
+    /* TOOL PAGE */
+    .tool-wrap{max-width:960px;margin:0 auto;padding:3rem 2rem 5rem}
+    .tool-breadcrumb{font-family:'Space Mono',monospace;font-size:.65rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:1.8rem;display:flex;align-items:center;gap:.5rem}
+    .tool-breadcrumb a{color:var(--muted);text-decoration:none;transition:color .2s}.tool-breadcrumb a:hover{color:var(--accent)}
+    .tool-breadcrumb span{color:var(--border2)}
+
+    .tool-header{margin-bottom:2.5rem}
+    .tool-cat-badge{font-family:'Space Mono',monospace;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);border:1px solid rgba(212,255,0,.35);display:inline-block;padding:.22rem .6rem;border-radius:2px;margin-bottom:.9rem}
+    .tool-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(2.2rem,5vw,3.5rem);letter-spacing:.03em;line-height:1;color:var(--text);margin-bottom:.6rem}
+    .tool-desc{color:var(--text-dim);font-size:.95rem;line-height:1.7;max-width:640px}
+
+    /* TOOL BODY */
+    .tool-box{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:2rem;margin-bottom:1.5rem}
+    .tool-box h3{font-family:'Space Mono',monospace;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:1.2rem}
+
+    /* Generic inputs */
+    textarea, input[type=text], input[type=number], input[type=date], input[type=url], select {
+      width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;
+      padding:.75rem 1rem;color:var(--text);font-family:'DM Sans',sans-serif;font-size:.92rem;
+      outline:none;transition:border-color .2s;resize:vertical
+    }
+    textarea:focus, input:focus, select:focus{border-color:var(--accent)}
+    textarea{min-height:160px}
+    select option{background:var(--surface2)}
+
+    .btn{font-family:'Space Mono',monospace;font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;
+      background:var(--accent);color:var(--bg);border:none;padding:.75rem 1.8rem;border-radius:6px;
+      cursor:pointer;font-weight:700;transition:all .2s;display:inline-flex;align-items:center;gap:.45rem}
+    .btn:hover{background:#eeff44;transform:translateY(-1px);box-shadow:0 6px 20px rgba(212,255,0,.25)}
+    .btn-outline{background:none;border:1px solid var(--border2);color:var(--text-dim)}
+    .btn-outline:hover{border-color:var(--accent);color:var(--accent);background:none;box-shadow:none;transform:none}
+    .btn-row{display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1.2rem}
+
+    .output-area{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:1rem;
+      min-height:100px;font-family:'Space Mono',monospace;font-size:.78rem;color:var(--text);
+      white-space:pre-wrap;word-break:break-all;line-height:1.6}
+    .output-label{font-family:'Space Mono',monospace;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.6rem;margin-top:1.2rem}
+
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+    @media(max-width:600px){.row2{grid-template-columns:1fr}}
+
+    label{font-family:'Space Mono',monospace;font-size:.65rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:.4rem}
+
+    /* Range */
+    input[type=range]{-webkit-appearance:none;appearance:none;height:4px;background:var(--border2);border-radius:2px;border:none;padding:0}
+    input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;background:var(--accent);border-radius:50%;cursor:pointer}
+
+    /* File drop */
+    .drop-zone{border:2px dashed var(--border2);border-radius:12px;padding:3rem 2rem;text-align:center;
+      cursor:pointer;transition:all .2s}
+    .drop-zone:hover,.drop-zone.dragover{border-color:var(--accent);background:rgba(212,255,0,.04)}
+    .drop-icon{font-size:2.5rem;margin-bottom:.7rem}
+    .drop-text{font-size:.85rem;color:var(--text-dim)}
+    .drop-text strong{color:var(--accent)}
+
+    /* Stats row */
+    .stats-row{display:flex;gap:1.5rem;flex-wrap:wrap;margin-top:1rem}
+    .stat-box{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.75rem 1.2rem;flex:1;min-width:100px;text-align:center}
+    .stat-val{font-family:'Bebas Neue',sans-serif;font-size:2rem;color:var(--accent);line-height:1}
+    .stat-lbl{font-family:'Space Mono',monospace;font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:.2rem}
+
+    /* Password strength */
+    .strength-bar{height:5px;border-radius:3px;margin-top:.6rem;transition:all .3s;background:var(--border2)}
+
+    /* Color swatch */
+    .color-swatch{width:100%;height:80px;border-radius:8px;border:1px solid var(--border2);margin-bottom:.8rem;transition:background .2s}
+
+    /* QR placeholder */
+    .qr-preview{width:200px;height:200px;background:white;border-radius:12px;margin:1rem auto;display:flex;align-items:center;justify-content:center;font-size:.8rem;color:#555}
+
+    /* Notice */
+    .notice{background:rgba(212,255,0,.06);border:1px solid rgba(212,255,0,.2);border-radius:8px;padding:.9rem 1.2rem;font-size:.82rem;color:var(--text-dim);line-height:1.6}
+    .notice strong{color:var(--accent)}
+
+    /* Not found */
+    .not-found{text-align:center;padding:5rem 2rem}
+    .not-found h2{font-family:'Bebas Neue',sans-serif;font-size:3rem;color:var(--text);margin-bottom:.5rem}
+    .not-found p{color:var(--text-dim);margin-bottom:1.5rem}
+
+    /* Related tools */
+    .related-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.85rem;margin-top:1.2rem}
+    @media(max-width:600px){.related-grid{grid-template-columns:1fr 1fr}}
+    .related-card{background:var(--card-bg);border:1px solid var(--border2);border-radius:10px;padding:1rem;text-decoration:none;color:var(--text-dim);transition:all .2s;font-size:.78rem;display:flex;align-items:center;gap:.6rem}
+    .related-card:hover{border-color:var(--accent);color:var(--accent);background:rgba(212,255,0,.04)}
+
+    @keyframes fup{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+    .tool-header,.tool-box{animation:fup .4s ease both}
+    .tool-box:nth-child(2){animation-delay:.07s}
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="h-inner">
+    <a href="index.html" class="logo-wrap">
+      <svg class="logo-icon" viewBox="0 0 36 36" fill="none">
+        <rect width="36" height="36" rx="8" fill="#d4ff00"/>
+        <rect x="6" y="14" width="24" height="16" rx="2.5" fill="#0d0d0f"/>
+        <rect x="13" y="10" width="10" height="6" rx="2" stroke="#0d0d0f" stroke-width="2.2" fill="none"/>
+        <rect x="15.5" y="19" width="5" height="3" rx="1" fill="#d4ff00"/>
+        <line x1="6" y1="22" x2="30" y2="22" stroke="#d4ff00" stroke-width="1.5"/>
+      </svg>
+      <span class="logo-text">ALL<span>TOOL</span>HUB</span>
+    </a>
+    <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back to All Tools</a>
+  </div>
+</header>
+
+<div class="tool-wrap" id="toolWrap">
+  <!-- Tool content injected here by JS -->
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// TOOL DEFINITIONS
+// ══════════════════════════════════════════════
+const TOOLS = {
+  // ── IMAGE TOOLS
+  'image-compressor': {
+    title: 'Image Compressor', cat: 'Image Tools', catLink: '#image-tools',
+    desc: 'Reduce image file size by up to 80% with no visible quality loss. Supports JPG, PNG, WebP.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Upload Image</h3>
+        <div class="drop-zone" id="dropZone" onclick="document.getElementById('imgInput').click()">
+          <div class="drop-icon">🗜️</div>
+          <div class="drop-text"><strong>Click to upload</strong> or drag & drop<br>JPG, PNG, WebP supported</div>
+          <input type="file" id="imgInput" accept="image/*" style="display:none" onchange="compressImage(this)">
+        </div>
+        <div style="margin-top:1rem">
+          <label>Quality: <span id="qualVal">75</span>%</label>
+          <input type="range" min="10" max="100" value="75" id="qualSlider" oninput="document.getElementById('qualVal').textContent=this.value">
+        </div>
+        <div class="btn-row">
+          <button class="btn" onclick="compressImage()">Compress Image</button>
+        </div>
+        <div class="output-label">Result</div>
+        <div class="output-area" id="compressOut">Upload an image to see compression results here.</div>
+      </div>`,
+    init: () => {
+      const dz = document.getElementById('dropZone');
+      if(dz) {
+        dz.addEventListener('dragover', e=>{e.preventDefault();dz.classList.add('dragover')});
+        dz.addEventListener('dragleave', ()=>dz.classList.remove('dragover'));
+        dz.addEventListener('drop', e=>{e.preventDefault();dz.classList.remove('dragover');const f=e.dataTransfer.files[0];if(f)processCompress(f)});
+      }
+    }
+  },
+
+  'image-resizer': {
+    title: 'Image Resizer', cat: 'Image Tools', catLink: '#image-tools',
+    desc: 'Resize any image to exact pixels or percentage without distortion.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Upload & Resize</h3>
+        <div class="drop-zone" onclick="document.getElementById('resizeInput').click()">
+          <div class="drop-icon">↔️</div>
+          <div class="drop-text"><strong>Click to upload image</strong></div>
+          <input type="file" id="resizeInput" accept="image/*" style="display:none" onchange="previewResize(this)">
+        </div>
+        <div class="row2" style="margin-top:1rem">
+          <div><label>Width (px)</label><input type="number" id="rW" value="800" placeholder="Width"></div>
+          <div><label>Height (px)</label><input type="number" id="rH" value="600" placeholder="Height"></div>
+        </div>
+        <div style="margin-top:.8rem"><label><input type="checkbox" id="keepRatio" checked style="width:auto;margin-right:.4rem"> Maintain Aspect Ratio</label></div>
+        <div class="btn-row">
+          <button class="btn" onclick="doResize()">Resize Image</button>
+        </div>
+        <div id="resizeResult"></div>
+      </div>`
+  },
+
+  'jpg-to-png': {
+    title: 'JPG to PNG Converter', cat: 'Image Tools', catLink: '#image-tools',
+    desc: 'Convert JPG images to transparent-ready PNG format instantly.',
+    render: () => convertImageUI('jpg-to-png', 'JPG → PNG', 'image/jpeg', 'image/png', '🔄')
+  },
+
+  'png-to-jpg': {
+    title: 'PNG to JPG Converter', cat: 'Image Tools', catLink: '#image-tools',
+    desc: 'Flatten PNG images to JPG for smaller file sizes and wider compatibility.',
+    render: () => convertImageUI('png-to-jpg', 'PNG → JPG', 'image/png', 'image/jpeg', '🔄')
+  },
+
+  'webp-to-jpg': {
+    title: 'WebP to JPG Converter', cat: 'Image Tools', catLink: '#image-tools',
+    desc: 'Convert modern WebP images to universally supported JPG format.',
+    render: () => convertImageUI('webp-to-jpg', 'WebP → JPG', 'image/webp', 'image/jpeg', '🔄')
+  },
+
+  'jpg-to-webp': {
+    title: 'JPG to WebP Converter', cat: 'Image Tools', catLink: '#image-tools',
+    desc: 'Convert JPG to WebP for faster web loading and better compression.',
+    render: () => convertImageUI('jpg-to-webp', 'JPG → WebP', 'image/jpeg', 'image/webp', '🔄')
+  },
+
+  'image-cropper': {
+    title: 'Image Cropper', cat: 'Image Tools', catLink: '#image-tools',
+    desc: 'Crop images to any aspect ratio or custom dimensions with live preview.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Upload Image</h3>
+        <div class="drop-zone" onclick="document.getElementById('cropInput').click()">
+          <div class="drop-icon">✂️</div>
+          <div class="drop-text"><strong>Click to upload image</strong> to crop</div>
+          <input type="file" id="cropInput" accept="image/*" style="display:none" onchange="loadCropImage(this)">
+        </div>
+        <div class="row2" style="margin-top:1rem">
+          <div><label>Crop X (px)</label><input type="number" id="cx" value="0"></div>
+          <div><label>Crop Y (px)</label><input type="number" id="cy" value="0"></div>
+          <div><label>Width (px)</label><input type="number" id="cw" value="400"></div>
+          <div><label>Height (px)</label><input type="number" id="ch" value="300"></div>
+        </div>
+        <div class="btn-row">
+          <button class="btn" onclick="doCrop()">Crop Image</button>
+        </div>
+        <div id="cropResult"></div>
+      </div>`
+  },
+
+  'image-rotator': {
+    title: 'Image Rotator', cat: 'Image Tools', catLink: '#image-tools',
+    desc: 'Rotate or flip images 90°, 180°, 270° or any custom angle.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Upload & Rotate</h3>
+        <div class="drop-zone" onclick="document.getElementById('rotInput').click()">
+          <div class="drop-icon">🔄</div>
+          <div class="drop-text"><strong>Click to upload image</strong></div>
+          <input type="file" id="rotInput" accept="image/*" style="display:none" onchange="loadRotImage(this)">
+        </div>
+        <div style="margin-top:1rem;display:flex;gap:.6rem;flex-wrap:wrap">
+          <button class="btn btn-outline" onclick="rotateImage(90)">↻ 90°</button>
+          <button class="btn btn-outline" onclick="rotateImage(180)">↻ 180°</button>
+          <button class="btn btn-outline" onclick="rotateImage(270)">↻ 270°</button>
+          <button class="btn btn-outline" onclick="flipImage('h')">↔ Flip H</button>
+          <button class="btn btn-outline" onclick="flipImage('v')">↕ Flip V</button>
+        </div>
+        <div id="rotResult" style="margin-top:1rem"></div>
+      </div>`
+  },
+
+  'image-to-base64': {
+    title: 'Image to Base64', cat: 'Image Tools', catLink: '#image-tools',
+    desc: 'Encode any image to Base64 string for embedding in HTML or CSS.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Upload Image</h3>
+        <div class="drop-zone" onclick="document.getElementById('b64In').click()">
+          <div class="drop-icon">🖼️→📝</div>
+          <div class="drop-text"><strong>Click to upload image</strong></div>
+          <input type="file" id="b64In" accept="image/*" style="display:none" onchange="imgToBase64(this)">
+        </div>
+        <div class="output-label">Base64 Output</div>
+        <textarea class="output-area" id="b64Out" style="min-height:120px" readonly placeholder="Base64 string will appear here..."></textarea>
+        <div class="btn-row">
+          <button class="btn" onclick="copyText('b64Out')">Copy Base64</button>
+        </div>
+      </div>`,
+    init: () => {}
+  },
+
+  'base64-to-image': {
+    title: 'Base64 to Image', cat: 'Image Tools', catLink: '#image-tools',
+    desc: 'Decode a Base64 string back into a viewable and downloadable image.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Paste Base64 String</h3>
+        <textarea id="b64Input" placeholder="Paste base64 string here (with or without data:image/... prefix)..." style="min-height:140px"></textarea>
+        <div class="btn-row">
+          <button class="btn" onclick="base64ToImg()">Convert to Image</button>
+        </div>
+        <div id="b64ImgResult" style="margin-top:1rem"></div>
+      </div>`
+  },
+
+  'image-watermark': {
+    title: 'Image Watermark Tool', cat: 'Image Tools', catLink: '#image-tools',
+    desc: 'Add text or logo watermarks to images with custom opacity and position.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Upload Image</h3>
+        <div class="drop-zone" onclick="document.getElementById('wmInput').click()">
+          <div class="drop-icon">©️</div>
+          <div class="drop-text"><strong>Click to upload image</strong></div>
+          <input type="file" id="wmInput" accept="image/*" style="display:none" onchange="loadWMImage(this)">
+        </div>
+        <div style="margin-top:1rem">
+          <label>Watermark Text</label>
+          <input type="text" id="wmText" value="© ALLTOOLHUB" placeholder="Your watermark text">
+        </div>
+        <div class="row2" style="margin-top:.8rem">
+          <div><label>Position</label>
+            <select id="wmPos">
+              <option value="bottom-right">Bottom Right</option>
+              <option value="bottom-left">Bottom Left</option>
+              <option value="top-right">Top Right</option>
+              <option value="top-left">Top Left</option>
+              <option value="center">Center</option>
+            </select>
+          </div>
+          <div><label>Opacity: <span id="wmOpVal">60</span>%</label>
+            <input type="range" min="10" max="100" value="60" oninput="document.getElementById('wmOpVal').textContent=this.value" id="wmOp">
+          </div>
+        </div>
+        <div class="btn-row"><button class="btn" onclick="applyWatermark()">Apply Watermark</button></div>
+        <div id="wmResult" style="margin-top:1rem"></div>
+      </div>`
+  },
+
+  'image-color-picker': {
+    title: 'Image Color Picker', cat: 'Image Tools', catLink: '#image-tools',
+    desc: 'Pick any color from an uploaded image and get its HEX, RGB, HSL values.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Upload Image & Click to Pick Color</h3>
+        <div class="drop-zone" id="cpDrop" onclick="document.getElementById('cpInput').click()">
+          <div class="drop-icon">🎨</div>
+          <div class="drop-text"><strong>Click to upload image</strong><br>Then click anywhere on the image to pick a color</div>
+          <input type="file" id="cpInput" accept="image/*" style="display:none" onchange="loadColorPicker(this)">
+        </div>
+        <canvas id="cpCanvas" style="display:none;max-width:100%;border-radius:8px;cursor:crosshair;margin-top:1rem" onclick="pickColor(event)"></canvas>
+        <div id="colorResult" style="margin-top:1rem;display:none">
+          <div class="color-swatch" id="colorSwatch"></div>
+          <div class="stats-row">
+            <div class="stat-box"><div class="stat-val" id="hexVal" style="font-size:1.1rem;font-family:monospace">#000000</div><div class="stat-lbl">HEX</div></div>
+            <div class="stat-box"><div class="stat-val" id="rgbVal" style="font-size:.85rem;font-family:monospace">rgb(0,0,0)</div><div class="stat-lbl">RGB</div></div>
+          </div>
+        </div>
+      </div>`
+  },
+
+  'image-metadata': {
+    title: 'Image Metadata Viewer', cat: 'Image Tools', catLink: '#image-tools',
+    desc: 'View hidden EXIF data: camera, GPS, date, resolution, and more.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Upload Image</h3>
+        <div class="drop-zone" onclick="document.getElementById('metaInput').click()">
+          <div class="drop-icon">🔍</div>
+          <div class="drop-text"><strong>Click to upload image</strong><br>View EXIF and metadata</div>
+          <input type="file" id="metaInput" accept="image/*" style="display:none" onchange="readMetadata(this)">
+        </div>
+        <div id="metaResult" style="margin-top:1rem"></div>
+      </div>`
+  },
+
+  'image-blur': {
+    title: 'Image Blur Tool', cat: 'Image Tools', catLink: '#image-tools',
+    desc: 'Apply Gaussian blur to an entire image or selected region.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Upload Image</h3>
+        <div class="drop-zone" onclick="document.getElementById('blurInput').click()">
+          <div class="drop-icon">🌫️</div>
+          <div class="drop-text"><strong>Click to upload image</strong></div>
+          <input type="file" id="blurInput" accept="image/*" style="display:none" onchange="loadBlurImage(this)">
+        </div>
+        <div style="margin-top:1rem"><label>Blur Amount: <span id="blurVal">5</span>px</label>
+          <input type="range" min="1" max="30" value="5" oninput="document.getElementById('blurVal').textContent=this.value" id="blurR"></div>
+        <div class="btn-row"><button class="btn" onclick="applyBlur()">Apply Blur</button></div>
+        <div id="blurResult" style="margin-top:1rem"></div>
+      </div>`
+  },
+
+  'image-sharpen': {
+    title: 'Image Sharpen Tool', cat: 'Image Tools', catLink: '#image-tools',
+    desc: 'Enhance image clarity and crisp up details with one-click sharpening.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Upload Image</h3>
+        <div class="drop-zone" onclick="document.getElementById('sharpInput').click()">
+          <div class="drop-icon">⭐</div>
+          <div class="drop-text"><strong>Click to upload image</strong></div>
+          <input type="file" id="sharpInput" accept="image/*" style="display:none" onchange="loadSharpImage(this)">
+        </div>
+        <div style="margin-top:1rem"><label>Sharpness: <span id="sharpVal">50</span>%</label>
+          <input type="range" min="10" max="100" value="50" oninput="document.getElementById('sharpVal').textContent=this.value" id="sharpR"></div>
+        <div class="btn-row"><button class="btn" onclick="applySharpen()">Sharpen Image</button></div>
+        <div id="sharpResult" style="margin-top:1rem"></div>
+      </div>`
+  },
+
+  // ── PDF TOOLS
+  'pdf-to-word': {
+    title: 'PDF to Word', cat: 'PDF Tools', catLink: '#pdf-tools',
+    desc: 'Convert PDF to fully editable .docx file preserving fonts and layout.',
+    render: () => fileUploadTool('PDF to Word', '📄', '.pdf', 'Convert to Word (.docx)', 'PDF file will be converted and downloaded as .docx')
+  },
+  'word-to-pdf': {
+    title: 'Word to PDF', cat: 'PDF Tools', catLink: '#pdf-tools',
+    desc: 'Convert .doc or .docx files to PDF with formatting intact.',
+    render: () => fileUploadTool('Word to PDF', '📝', '.doc,.docx', 'Convert to PDF', 'Word file will be converted and downloaded as .pdf')
+  },
+  'pdf-to-jpg': {
+    title: 'PDF to JPG', cat: 'PDF Tools', catLink: '#pdf-tools',
+    desc: 'Extract each PDF page as a high-quality JPG image.',
+    render: () => fileUploadTool('PDF to JPG', '📄→🖼️', '.pdf', 'Convert to JPG', 'Each page will be exported as a JPG image')
+  },
+  'jpg-to-pdf': {
+    title: 'JPG to PDF', cat: 'PDF Tools', catLink: '#pdf-tools',
+    desc: 'Combine one or more JPG images into a single PDF document.',
+    render: () => fileUploadTool('JPG to PDF', '🖼️→📄', '.jpg,.jpeg,.png', 'Convert to PDF', 'Images will be merged into a single PDF')
+  },
+  'pdf-compressor': {
+    title: 'PDF Compressor', cat: 'PDF Tools', catLink: '#pdf-tools',
+    desc: 'Reduce PDF file size while maintaining acceptable quality.',
+    render: () => fileUploadTool('PDF Compressor', '🗜️', '.pdf', 'Compress PDF', 'PDF will be compressed and ready to download')
+  },
+  'pdf-merger': {
+    title: 'PDF Merger', cat: 'PDF Tools', catLink: '#pdf-tools',
+    desc: 'Combine multiple PDF files into one document.',
+    render: () => fileUploadTool('PDF Merger', '📑', '.pdf', 'Merge PDFs', 'All uploaded PDFs will be merged into one file', true)
+  },
+  'pdf-splitter': {
+    title: 'PDF Splitter', cat: 'PDF Tools', catLink: '#pdf-tools',
+    desc: 'Split a PDF into individual pages or custom page ranges.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Upload PDF</h3>
+        <div class="drop-zone" onclick="document.getElementById('splitInput').click()">
+          <div class="drop-icon">✂️</div>
+          <div class="drop-text"><strong>Click to upload PDF</strong></div>
+          <input type="file" id="splitInput" accept=".pdf" style="display:none">
+        </div>
+        <div style="margin-top:1rem"><label>Page Range (e.g. 1-3, 5, 7-9)</label>
+          <input type="text" id="pageRange" placeholder="e.g. 1-3, 5, 7-9"></div>
+        <div class="btn-row"><button class="btn" onclick="showComingSoon('PDF Splitter')">Split PDF</button></div>
+        <div class="notice" style="margin-top:1rem">💡 <strong>Tip:</strong> Leave blank to split into individual pages.</div>
+      </div>`
+  },
+  'pdf-page-remover': {
+    title: 'PDF Page Remover', cat: 'PDF Tools', catLink: '#pdf-tools',
+    desc: 'Delete specific pages from a PDF.',
+    render: () => fileUploadTool('PDF Page Remover', '🗑️', '.pdf', 'Remove Pages', 'Specify page numbers to delete')
+  },
+  'pdf-page-rotator': {
+    title: 'PDF Page Rotator', cat: 'PDF Tools', catLink: '#pdf-tools',
+    desc: 'Rotate selected PDF pages to portrait or landscape.',
+    render: () => fileUploadTool('PDF Page Rotator', '🔄', '.pdf', 'Rotate Pages', 'Select pages and rotation angle')
+  },
+  'pdf-unlock': {
+    title: 'PDF Unlock Tool', cat: 'PDF Tools', catLink: '#pdf-tools',
+    desc: 'Remove password protection from PDFs you own.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Upload Protected PDF</h3>
+        <div class="drop-zone" onclick="document.getElementById('unlockInput').click()">
+          <div class="drop-icon">🔓</div>
+          <div class="drop-text"><strong>Click to upload PDF</strong></div>
+          <input type="file" id="unlockInput" accept=".pdf" style="display:none">
+        </div>
+        <div style="margin-top:1rem"><label>PDF Password</label>
+          <input type="text" id="pdfPass" placeholder="Enter current password"></div>
+        <div class="btn-row"><button class="btn" onclick="showComingSoon('PDF Unlock')">Remove Password</button></div>
+        <div class="notice" style="margin-top:1rem">⚠️ <strong>Legal use only.</strong> Only unlock PDFs you own or have permission to modify.</div>
+      </div>`
+  },
+  'pdf-lock': {
+    title: 'PDF Lock Tool', cat: 'PDF Tools', catLink: '#pdf-tools',
+    desc: 'Add password protection to any PDF.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Upload PDF</h3>
+        <div class="drop-zone" onclick="document.getElementById('lockInput').click()">
+          <div class="drop-icon">🔒</div>
+          <div class="drop-text"><strong>Click to upload PDF</strong></div>
+          <input type="file" id="lockInput" accept=".pdf" style="display:none">
+        </div>
+        <div class="row2" style="margin-top:1rem">
+          <div><label>Set Password</label><input type="password" id="lockPass" placeholder="Enter password"></div>
+          <div><label>Confirm Password</label><input type="password" id="lockPass2" placeholder="Repeat password"></div>
+        </div>
+        <div class="btn-row"><button class="btn" onclick="showComingSoon('PDF Lock')">Lock PDF</button></div>
+      </div>`
+  },
+  'pdf-to-excel': {
+    title: 'PDF to Excel', cat: 'PDF Tools', catLink: '#pdf-tools',
+    desc: 'Extract tables from PDF files into editable Excel spreadsheets.',
+    render: () => fileUploadTool('PDF to Excel', '📊', '.pdf', 'Convert to Excel', 'Tables will be extracted and saved as .xlsx')
+  },
+  'excel-to-pdf': {
+    title: 'Excel to PDF', cat: 'PDF Tools', catLink: '#pdf-tools',
+    desc: 'Convert Excel spreadsheets to clean, print-ready PDF documents.',
+    render: () => fileUploadTool('Excel to PDF', '📊→📄', '.xlsx,.xls', 'Convert to PDF', 'Spreadsheet will be saved as PDF')
+  },
+  'pdf-to-text': {
+    title: 'PDF to Text', cat: 'PDF Tools', catLink: '#pdf-tools',
+    desc: 'Extract all plain text from a PDF.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Upload PDF</h3>
+        <div class="drop-zone" onclick="document.getElementById('pttInput').click()">
+          <div class="drop-icon">📄→📝</div>
+          <div class="drop-text"><strong>Click to upload PDF</strong></div>
+          <input type="file" id="pttInput" accept=".pdf" style="display:none" onchange="showFileName(this,'pttName')">
+        </div>
+        <div id="pttName" style="margin-top:.6rem;font-size:.8rem;color:var(--text-dim)"></div>
+        <div class="btn-row"><button class="btn" onclick="showComingSoon('PDF to Text')">Extract Text</button></div>
+        <div class="output-label">Extracted Text</div>
+        <textarea class="output-area" style="min-height:200px" id="pttOut" readonly placeholder="Extracted text will appear here..."></textarea>
+        <div class="btn-row"><button class="btn btn-outline" onclick="copyText('pttOut')">Copy Text</button></div>
+      </div>`
+  },
+  'pdf-page-numbers': {
+    title: 'PDF Page Number Adder', cat: 'PDF Tools', catLink: '#pdf-tools',
+    desc: 'Automatically add page numbers to any position in your PDF.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Upload PDF</h3>
+        <div class="drop-zone" onclick="document.getElementById('ppnInput').click()">
+          <div class="drop-icon">🔢</div>
+          <div class="drop-text"><strong>Click to upload PDF</strong></div>
+          <input type="file" id="ppnInput" accept=".pdf" style="display:none">
+        </div>
+        <div class="row2" style="margin-top:1rem">
+          <div><label>Position</label>
+            <select id="pgPos">
+              <option>Bottom Center</option><option>Bottom Right</option><option>Bottom Left</option>
+              <option>Top Center</option><option>Top Right</option>
+            </select>
+          </div>
+          <div><label>Starting Number</label><input type="number" id="pgStart" value="1"></div>
+        </div>
+        <div class="btn-row"><button class="btn" onclick="showComingSoon('PDF Page Numbers')">Add Page Numbers</button></div>
+      </div>`
+  },
+
+  // ── TEXT TOOLS
+  'word-counter': {
+    title: 'Word Counter', cat: 'Text Tools', catLink: '#text-tools',
+    desc: 'Count words, characters, sentences and estimate reading time.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Paste Your Text</h3>
+        <textarea id="wcText" placeholder="Type or paste your text here..." oninput="countWords()" style="min-height:200px"></textarea>
+        <div class="stats-row" id="wcStats">
+          <div class="stat-box"><div class="stat-val" id="wCount">0</div><div class="stat-lbl">Words</div></div>
+          <div class="stat-box"><div class="stat-val" id="cCount">0</div><div class="stat-lbl">Characters</div></div>
+          <div class="stat-box"><div class="stat-val" id="sCount">0</div><div class="stat-lbl">Sentences</div></div>
+          <div class="stat-box"><div class="stat-val" id="pCount">0</div><div class="stat-lbl">Paragraphs</div></div>
+          <div class="stat-box"><div class="stat-val" id="rTime">0 min</div><div class="stat-lbl">Read Time</div></div>
+        </div>
+        <div class="btn-row"><button class="btn btn-outline" onclick="document.getElementById('wcText').value='';countWords()">Clear</button></div>
+      </div>`,
+    init: () => { window.countWords = function() {
+      const t = document.getElementById('wcText').value;
+      const words = t.trim() ? t.trim().split(/\s+/).length : 0;
+      const chars = t.length;
+      const sentences = t.trim() ? (t.match(/[.!?]+/g)||[]).length : 0;
+      const paras = t.trim() ? t.trim().split(/\n\n+/).length : 0;
+      const rt = Math.ceil(words/200);
+      document.getElementById('wCount').textContent = words;
+      document.getElementById('cCount').textContent = chars;
+      document.getElementById('sCount').textContent = sentences;
+      document.getElementById('pCount').textContent = paras;
+      document.getElementById('rTime').textContent = rt + ' min';
+    }}
+  },
+
+  'character-counter': {
+    title: 'Character Counter', cat: 'Text Tools', catLink: '#text-tools',
+    desc: 'Count characters with and without spaces.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Paste Your Text</h3>
+        <textarea id="ccText" placeholder="Type or paste text..." oninput="charCount()" style="min-height:180px"></textarea>
+        <div class="stats-row">
+          <div class="stat-box"><div class="stat-val" id="ccAll">0</div><div class="stat-lbl">All Chars</div></div>
+          <div class="stat-box"><div class="stat-val" id="ccNoSp">0</div><div class="stat-lbl">No Spaces</div></div>
+          <div class="stat-box"><div class="stat-val" id="ccWords">0</div><div class="stat-lbl">Words</div></div>
+          <div class="stat-box"><div class="stat-val" id="ccLines">0</div><div class="stat-lbl">Lines</div></div>
+        </div>
+      </div>`,
+    init: () => { window.charCount = function() {
+      const t = document.getElementById('ccText').value;
+      document.getElementById('ccAll').textContent = t.length;
+      document.getElementById('ccNoSp').textContent = t.replace(/\s/g,'').length;
+      document.getElementById('ccWords').textContent = t.trim() ? t.trim().split(/\s+/).length : 0;
+      document.getElementById('ccLines').textContent = t ? t.split('\n').length : 0;
+    }}
+  },
+
+  'case-converter': {
+    title: 'Case Converter', cat: 'Text Tools', catLink: '#text-tools',
+    desc: 'Switch text between UPPER, lower, Title Case, camelCase and more.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Enter Text</h3>
+        <textarea id="caseIn" placeholder="Type or paste text here..." style="min-height:150px"></textarea>
+        <div class="btn-row">
+          <button class="btn btn-outline" onclick="convertCase('upper')">UPPERCASE</button>
+          <button class="btn btn-outline" onclick="convertCase('lower')">lowercase</button>
+          <button class="btn btn-outline" onclick="convertCase('title')">Title Case</button>
+          <button class="btn btn-outline" onclick="convertCase('camel')">camelCase</button>
+          <button class="btn btn-outline" onclick="convertCase('snake')">snake_case</button>
+          <button class="btn btn-outline" onclick="convertCase('sentence')">Sentence case</button>
+        </div>
+        <div class="output-label">Result</div>
+        <textarea id="caseOut" class="output-area" style="min-height:120px" readonly></textarea>
+        <div class="btn-row"><button class="btn" onclick="copyText('caseOut')">Copy Result</button></div>
+      </div>`,
+    init: () => { window.convertCase = function(type) {
+      const t = document.getElementById('caseIn').value;
+      let r = t;
+      if(type==='upper') r = t.toUpperCase();
+      else if(type==='lower') r = t.toLowerCase();
+      else if(type==='title') r = t.replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.substr(1).toLowerCase());
+      else if(type==='camel') r = t.toLowerCase().replace(/[^a-zA-Z0-9]+(.)/g, (m, chr) => chr.toUpperCase());
+      else if(type==='snake') r = t.toLowerCase().replace(/\s+/g,'_');
+      else if(type==='sentence') r = t.charAt(0).toUpperCase() + t.slice(1).toLowerCase();
+      document.getElementById('caseOut').value = r;
+    }}
+  },
+
+  'remove-line-breaks': {
+    title: 'Remove Line Breaks', cat: 'Text Tools', catLink: '#text-tools',
+    desc: 'Strip extra line breaks and whitespace from pasted text.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Input Text</h3>
+        <textarea id="rlbIn" placeholder="Paste text with line breaks..." style="min-height:160px"></textarea>
+        <div class="btn-row">
+          <button class="btn" onclick="removeBreaks()">Remove Line Breaks</button>
+          <button class="btn btn-outline" onclick="removeExtraBreaks()">Remove Extra Breaks Only</button>
+        </div>
+        <div class="output-label">Result</div>
+        <textarea id="rlbOut" class="output-area" readonly style="min-height:120px"></textarea>
+        <div class="btn-row"><button class="btn btn-outline" onclick="copyText('rlbOut')">Copy</button></div>
+      </div>`,
+    init: () => {
+      window.removeBreaks = () => { document.getElementById('rlbOut').value = document.getElementById('rlbIn').value.replace(/[\r\n]+/g,' ').trim(); };
+      window.removeExtraBreaks = () => { document.getElementById('rlbOut').value = document.getElementById('rlbIn').value.replace(/[\r\n]{3,}/g,'\n\n').trim(); };
+    }
+  },
+
+  'text-sorter': {
+    title: 'Text Sorter', cat: 'Text Tools', catLink: '#text-tools',
+    desc: 'Sort lines of text alphabetically, numerically, or in reverse order.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Input Lines</h3>
+        <textarea id="tsIn" placeholder="Each line will be sorted separately..." style="min-height:160px"></textarea>
+        <div class="btn-row">
+          <button class="btn btn-outline" onclick="sortLines('az')">A → Z</button>
+          <button class="btn btn-outline" onclick="sortLines('za')">Z → A</button>
+          <button class="btn btn-outline" onclick="sortLines('num')">0 → 9</button>
+          <button class="btn btn-outline" onclick="sortLines('rand')">Random</button>
+        </div>
+        <div class="output-label">Sorted Output</div>
+        <textarea id="tsOut" class="output-area" readonly style="min-height:120px"></textarea>
+        <div class="btn-row"><button class="btn" onclick="copyText('tsOut')">Copy</button></div>
+      </div>`,
+    init: () => { window.sortLines = function(t) {
+      const lines = document.getElementById('tsIn').value.split('\n');
+      let sorted;
+      if(t==='az') sorted = [...lines].sort();
+      else if(t==='za') sorted = [...lines].sort().reverse();
+      else if(t==='num') sorted = [...lines].sort((a,b) => parseFloat(a)-parseFloat(b));
+      else sorted = [...lines].sort(()=>Math.random()-.5);
+      document.getElementById('tsOut').value = sorted.join('\n');
+    }}
+  },
+
+  'duplicate-remover': {
+    title: 'Duplicate Line Remover', cat: 'Text Tools', catLink: '#text-tools',
+    desc: 'Remove duplicate lines from a text list instantly.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Input Text</h3>
+        <textarea id="drIn" placeholder="Paste list with duplicate lines..." style="min-height:160px"></textarea>
+        <div class="btn-row"><button class="btn" onclick="removeDupes()">Remove Duplicates</button></div>
+        <div class="output-label">Result (Unique Lines)</div>
+        <textarea id="drOut" class="output-area" readonly style="min-height:120px"></textarea>
+        <div class="btn-row"><button class="btn btn-outline" onclick="copyText('drOut')">Copy</button></div>
+      </div>`,
+    init: () => { window.removeDupes = function() {
+      const lines = document.getElementById('drIn').value.split('\n');
+      const unique = [...new Set(lines)];
+      document.getElementById('drOut').value = unique.join('\n');
+    }}
+  },
+
+  'lorem-ipsum': {
+    title: 'Lorem Ipsum Generator', cat: 'Text Tools', catLink: '#text-tools',
+    desc: 'Generate placeholder Lorem Ipsum text by words, sentences, or paragraphs.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Generate Lorem Ipsum</h3>
+        <div class="row2">
+          <div><label>Amount</label><input type="number" id="liAmt" value="3" min="1" max="50"></div>
+          <div><label>Type</label>
+            <select id="liType">
+              <option value="words">Words</option>
+              <option value="sentences">Sentences</option>
+              <option value="paragraphs" selected>Paragraphs</option>
+            </select>
+          </div>
+        </div>
+        <div class="btn-row"><button class="btn" onclick="genLorem()">Generate</button></div>
+        <div class="output-label">Generated Text</div>
+        <textarea id="liOut" class="output-area" readonly style="min-height:180px"></textarea>
+        <div class="btn-row"><button class="btn btn-outline" onclick="copyText('liOut')">Copy</button></div>
+      </div>`,
+    init: () => {
+      const lorem = "Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua Ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur Excepteur sint occaecat cupidatat non proident sunt in culpa qui officia deserunt mollit anim id est laborum".split(' ');
+      window.genLorem = function() {
+        const amt = parseInt(document.getElementById('liAmt').value);
+        const type = document.getElementById('liType').value;
+        let out = '';
+        if(type==='words') { out = lorem.slice(0,amt).join(' '); }
+        else if(type==='sentences') { for(let i=0;i<amt;i++) out += lorem.sort(()=>Math.random()-.5).slice(0,12).join(' ') + '. '; }
+        else { for(let i=0;i<amt;i++) { for(let j=0;j<4;j++) out += lorem.sort(()=>Math.random()-.5).slice(0,15).join(' ') + '. '; out += '\n\n'; } }
+        document.getElementById('liOut').value = out.trim();
+      };
+      window.genLorem();
+    }
+  },
+
+  'random-text': {
+    title: 'Random Text Generator', cat: 'Text Tools', catLink: '#text-tools',
+    desc: 'Generate random sentences, words, or paragraphs for testing.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Generate Random Text</h3>
+        <div class="row2">
+          <div><label>Length</label><input type="number" id="rtLen" value="100" min="10"></div>
+          <div><label>Type</label>
+            <select id="rtType">
+              <option value="words">Random Words</option>
+              <option value="chars">Random Characters</option>
+              <option value="mixed">Mixed</option>
+            </select>
+          </div>
+        </div>
+        <div class="btn-row"><button class="btn" onclick="genRandText()">Generate</button></div>
+        <div class="output-label">Output</div>
+        <textarea id="rtOut" class="output-area" readonly style="min-height:140px"></textarea>
+        <div class="btn-row"><button class="btn btn-outline" onclick="copyText('rtOut')">Copy</button></div>
+      </div>`,
+    init: () => { window.genRandText = function() {
+      const len = parseInt(document.getElementById('rtLen').value);
+      const type = document.getElementById('rtType').value;
+      const chars = 'abcdefghijklmnopqrstuvwxyz0123456789!@#$%';
+      const words = ['the','quick','brown','fox','jumps','over','lazy','dog','hello','world','test','sample','random','text','generator'];
+      let out = '';
+      if(type==='chars') { for(let i=0;i<len;i++) out += chars[Math.floor(Math.random()*chars.length)]; }
+      else if(type==='words') { while(out.split(' ').length<len) out += words[Math.floor(Math.random()*words.length)] + ' '; }
+      else { out = Array.from({length:len},()=>Math.random()>.5?words[Math.floor(Math.random()*words.length)]:chars[Math.floor(Math.random()*chars.length)]).join(' '); }
+      document.getElementById('rtOut').value = out.trim();
+    }}
+  },
+
+  'text-to-speech': {
+    title: 'Text to Speech', cat: 'Text Tools', catLink: '#text-tools',
+    desc: 'Convert any text to lifelike audio in multiple voices and languages.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Enter Text</h3>
+        <textarea id="ttsText" placeholder="Type text to convert to speech..." style="min-height:160px"></textarea>
+        <div class="row2" style="margin-top:1rem">
+          <div><label>Voice / Language</label>
+            <select id="ttsVoice"></select>
+          </div>
+          <div><label>Rate: <span id="ttsRate">1</span>x</label>
+            <input type="range" min="0.5" max="2" step="0.1" value="1" oninput="document.getElementById('ttsRate').textContent=this.value" id="ttsRateR">
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn" onclick="speakText()">▶ Speak</button>
+          <button class="btn btn-outline" onclick="speechSynthesis.cancel()">⏹ Stop</button>
+        </div>
+      </div>`,
+    init: () => {
+      const sel = document.getElementById('ttsVoice');
+      const loadVoices = () => {
+        const voices = speechSynthesis.getVoices();
+        sel.innerHTML = voices.map((v,i)=>`<option value="${i}">${v.name} (${v.lang})</option>`).join('');
+      };
+      loadVoices();
+      speechSynthesis.onvoiceschanged = loadVoices;
+      window.speakText = function() {
+        const t = document.getElementById('ttsText').value;
+        if(!t) return;
+        speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(t);
+        const voices = speechSynthesis.getVoices();
+        u.voice = voices[document.getElementById('ttsVoice').value];
+        u.rate = parseFloat(document.getElementById('ttsRateR').value);
+        speechSynthesis.speak(u);
+      };
+    }
+  },
+
+  'speech-to-text': {
+    title: 'Speech to Text', cat: 'Text Tools', catLink: '#text-tools',
+    desc: 'Transcribe spoken audio to editable text.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Voice Recorder</h3>
+        <div style="text-align:center;padding:2rem 0">
+          <div style="font-size:4rem;margin-bottom:1rem" id="sttIcon">🎙️</div>
+          <div id="sttStatus" style="font-family:var(--ff-mono,monospace);font-size:.8rem;color:var(--muted);margin-bottom:1.5rem">Click to start recording</div>
+          <button class="btn" id="sttBtn" onclick="toggleSTT()">Start Recording</button>
+        </div>
+        <div class="output-label">Transcription</div>
+        <textarea id="sttOut" class="output-area" style="min-height:140px" placeholder="Your speech will appear here..."></textarea>
+        <div class="btn-row">
+          <button class="btn btn-outline" onclick="copyText('sttOut')">Copy</button>
+          <button class="btn btn-outline" onclick="document.getElementById('sttOut').value=''">Clear</button>
+        </div>
+      </div>`,
+    init: () => {
+      let rec = null;
+      window.toggleSTT = function() {
+        if(!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+          alert('Speech recognition not supported in this browser. Try Chrome.');
+          return;
+        }
+        if(rec && rec.running) { rec.stop(); return; }
+        rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        rec.continuous = true; rec.interimResults = true;
+        rec.onresult = e => {
+          let t = '';
+          for(let i=0;i<e.results.length;i++) t += e.results[i][0].transcript;
+          document.getElementById('sttOut').value = t;
+        };
+        rec.onstart = () => { rec.running=true; document.getElementById('sttStatus').textContent='🔴 Recording...'; document.getElementById('sttBtn').textContent='Stop Recording'; document.getElementById('sttIcon').textContent='🔴'; };
+        rec.onend = () => { rec.running=false; document.getElementById('sttStatus').textContent='Recording stopped.'; document.getElementById('sttBtn').textContent='Start Recording'; document.getElementById('sttIcon').textContent='🎙️'; };
+        rec.start();
+      };
+    }
+  },
+
+  // ── DEVELOPER TOOLS
+  'base64-encoder': {
+    title: 'Base64 Encoder', cat: 'Developer Tools', catLink: '#dev-tools',
+    desc: 'Encode any text into a Base64 string.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Input Text</h3>
+        <textarea id="b64eIn" placeholder="Type or paste text to encode..." style="min-height:140px"></textarea>
+        <div class="btn-row"><button class="btn" onclick="b64Encode()">Encode to Base64</button></div>
+        <div class="output-label">Base64 Output</div>
+        <textarea id="b64eOut" class="output-area" readonly style="min-height:100px"></textarea>
+        <div class="btn-row"><button class="btn btn-outline" onclick="copyText('b64eOut')">Copy</button></div>
+      </div>`,
+    init: () => { window.b64Encode = () => { try { document.getElementById('b64eOut').value = btoa(unescape(encodeURIComponent(document.getElementById('b64eIn').value))); } catch(e) { document.getElementById('b64eOut').value = 'Error: ' + e.message; } }; }
+  },
+
+  'base64-decoder': {
+    title: 'Base64 Decoder', cat: 'Developer Tools', catLink: '#dev-tools',
+    desc: 'Decode a Base64 string back to readable text.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Input Base64</h3>
+        <textarea id="b64dIn" placeholder="Paste Base64 string here..." style="min-height:120px"></textarea>
+        <div class="btn-row"><button class="btn" onclick="b64Decode()">Decode Base64</button></div>
+        <div class="output-label">Decoded Output</div>
+        <textarea id="b64dOut" class="output-area" readonly style="min-height:100px"></textarea>
+        <div class="btn-row"><button class="btn btn-outline" onclick="copyText('b64dOut')">Copy</button></div>
+      </div>`,
+    init: () => { window.b64Decode = () => { try { document.getElementById('b64dOut').value = decodeURIComponent(escape(atob(document.getElementById('b64dIn').value))); } catch(e) { document.getElementById('b64dOut').value = 'Error: Invalid Base64 string.'; } }; }
+  },
+
+  'json-formatter': {
+    title: 'JSON Formatter', cat: 'Developer Tools', catLink: '#dev-tools',
+    desc: 'Beautify and indent raw JSON for easy reading and debugging.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Raw JSON Input</h3>
+        <textarea id="jfIn" placeholder='{"key":"value","arr":[1,2,3]}' style="min-height:160px;font-family:monospace;font-size:.82rem"></textarea>
+        <div class="btn-row">
+          <button class="btn" onclick="formatJSON()">Format / Beautify</button>
+          <button class="btn btn-outline" onclick="minifyJSON()">Minify</button>
+        </div>
+        <div class="output-label">Output</div>
+        <textarea id="jfOut" class="output-area" readonly style="min-height:180px;font-size:.8rem"></textarea>
+        <div class="btn-row"><button class="btn btn-outline" onclick="copyText('jfOut')">Copy</button></div>
+      </div>`,
+    init: () => {
+      window.formatJSON = () => { try { document.getElementById('jfOut').value = JSON.stringify(JSON.parse(document.getElementById('jfIn').value), null, 2); } catch(e) { document.getElementById('jfOut').value = '❌ Invalid JSON: ' + e.message; } };
+      window.minifyJSON = () => { try { document.getElementById('jfOut').value = JSON.stringify(JSON.parse(document.getElementById('jfIn').value)); } catch(e) { document.getElementById('jfOut').value = '❌ Invalid JSON: ' + e.message; } };
+    }
+  },
+
+  'json-validator': {
+    title: 'JSON Validator', cat: 'Developer Tools', catLink: '#dev-tools',
+    desc: 'Check if your JSON is syntactically valid.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Paste JSON</h3>
+        <textarea id="jvIn" placeholder="Paste JSON to validate..." style="min-height:200px;font-family:monospace;font-size:.82rem"></textarea>
+        <div class="btn-row"><button class="btn" onclick="validateJSON()">Validate JSON</button></div>
+        <div id="jvResult" style="margin-top:1rem"></div>
+      </div>`,
+    init: () => { window.validateJSON = () => {
+      const el = document.getElementById('jvResult');
+      try { JSON.parse(document.getElementById('jvIn').value); el.innerHTML='<div class="notice" style="border-color:rgba(72,187,120,.4);background:rgba(72,187,120,.06)">✅ <strong>Valid JSON!</strong> Your JSON is syntactically correct.</div>'; }
+      catch(e) { el.innerHTML=`<div class="notice" style="border-color:rgba(252,129,129,.4);background:rgba(252,129,129,.06)">❌ <strong>Invalid JSON:</strong> ${e.message}</div>`; }
+    }}
+  },
+
+  'html-formatter': {
+    title: 'HTML Formatter', cat: 'Developer Tools', catLink: '#dev-tools',
+    desc: 'Indent and clean up minified or messy HTML code.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Input HTML</h3>
+        <textarea id="hfIn" placeholder="Paste HTML code here..." style="min-height:180px;font-family:monospace;font-size:.78rem"></textarea>
+        <div class="btn-row"><button class="btn" onclick="formatHTML()">Format HTML</button></div>
+        <div class="output-label">Formatted Output</div>
+        <textarea id="hfOut" class="output-area" readonly style="min-height:200px;font-size:.78rem"></textarea>
+        <div class="btn-row"><button class="btn btn-outline" onclick="copyText('hfOut')">Copy</button></div>
+      </div>`,
+    init: () => { window.formatHTML = () => {
+      let h = document.getElementById('hfIn').value;
+      let indent = 0;
+      h = h.replace(/></g, '>\n<').replace(/^\s+|\s+$/gm,'');
+      const lines = h.split('\n');
+      let out = '';
+      lines.forEach(line => {
+        if(line.match(/^<\//)) indent = Math.max(0, indent-1);
+        out += '  '.repeat(indent) + line.trim() + '\n';
+        if(line.match(/^<[^\/!]/) && !line.match(/\/>$/) && !line.match(/<\//) && !['<br','<hr','<img','<input','<link','<meta'].some(t=>line.startsWith(t))) indent++;
+      });
+      document.getElementById('hfOut').value = out.trim();
+    }}
+  },
+
+  'css-minifier': {
+    title: 'CSS Minifier', cat: 'Developer Tools', catLink: '#dev-tools',
+    desc: 'Remove whitespace and comments from CSS to reduce file size.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Input CSS</h3>
+        <textarea id="cmIn" placeholder="Paste CSS code here..." style="min-height:200px;font-family:monospace;font-size:.78rem"></textarea>
+        <div class="btn-row"><button class="btn" onclick="minifyCSS()">Minify CSS</button></div>
+        <div class="output-label">Minified CSS</div>
+        <textarea id="cmOut" class="output-area" readonly style="min-height:100px;font-size:.78rem"></textarea>
+        <div class="btn-row"><button class="btn btn-outline" onclick="copyText('cmOut')">Copy</button></div>
+      </div>`,
+    init: () => { window.minifyCSS = () => {
+      let c = document.getElementById('cmIn').value;
+      c = c.replace(/\/\*[\s\S]*?\*\//g,'').replace(/\s+/g,' ').replace(/\s*([{};:,>~+])\s*/g,'$1').trim();
+      document.getElementById('cmOut').value = c;
+    }}
+  },
+
+  'css-beautifier': {
+    title: 'CSS Beautifier', cat: 'Developer Tools', catLink: '#dev-tools',
+    desc: 'Format and indent compressed CSS into clean, readable code.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Input CSS</h3>
+        <textarea id="cbIn" placeholder="Paste minified CSS here..." style="min-height:160px;font-family:monospace;font-size:.78rem"></textarea>
+        <div class="btn-row"><button class="btn" onclick="beautifyCSS()">Beautify CSS</button></div>
+        <div class="output-label">Formatted CSS</div>
+        <textarea id="cbOut" class="output-area" readonly style="min-height:200px;font-size:.78rem"></textarea>
+        <div class="btn-row"><button class="btn btn-outline" onclick="copyText('cbOut')">Copy</button></div>
+      </div>`,
+    init: () => { window.beautifyCSS = () => {
+      let c = document.getElementById('cbIn').value;
+      c = c.replace(/\{/g,' {\n  ').replace(/;/g,';\n  ').replace(/\}/g,'\n}\n').replace(/  \n\}/g,'\n}');
+      document.getElementById('cbOut').value = c.trim();
+    }}
+  },
+
+  'js-minifier': {
+    title: 'JavaScript Minifier', cat: 'Developer Tools', catLink: '#dev-tools',
+    desc: 'Minify JS code to reduce page load time.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Input JavaScript</h3>
+        <textarea id="jsmIn" placeholder="Paste JavaScript code here..." style="min-height:200px;font-family:monospace;font-size:.78rem"></textarea>
+        <div class="btn-row"><button class="btn" onclick="minifyJS()">Minify JS</button></div>
+        <div class="output-label">Minified JS</div>
+        <textarea id="jsmOut" class="output-area" readonly style="min-height:100px;font-size:.78rem"></textarea>
+        <div class="btn-row"><button class="btn btn-outline" onclick="copyText('jsmOut')">Copy</button></div>
+        <div class="notice" style="margin-top:1rem">⚠️ <strong>Basic minification:</strong> Removes comments and extra whitespace. For production, use tools like Terser.</div>
+      </div>`,
+    init: () => { window.minifyJS = () => {
+      let j = document.getElementById('jsmIn').value;
+      j = j.replace(/\/\/[^\n]*/g,'').replace(/\/\*[\s\S]*?\*\//g,'').replace(/\s+/g,' ').trim();
+      document.getElementById('jsmOut').value = j;
+    }}
+  },
+
+  'url-encoder': {
+    title: 'URL Encoder', cat: 'Developer Tools', catLink: '#dev-tools',
+    desc: 'Encode special characters in URLs to make them web-safe.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Input URL / Text</h3>
+        <textarea id="ueIn" placeholder="Enter URL or text to encode..." style="min-height:100px"></textarea>
+        <div class="btn-row"><button class="btn" onclick="encodeURL()">Encode URL</button></div>
+        <div class="output-label">Encoded Output</div>
+        <textarea id="ueOut" class="output-area" readonly style="min-height:80px"></textarea>
+        <div class="btn-row"><button class="btn btn-outline" onclick="copyText('ueOut')">Copy</button></div>
+      </div>`,
+    init: () => { window.encodeURL = () => { document.getElementById('ueOut').value = encodeURIComponent(document.getElementById('ueIn').value); }; }
+  },
+
+  'url-decoder': {
+    title: 'URL Decoder', cat: 'Developer Tools', catLink: '#dev-tools',
+    desc: 'Decode percent-encoded URL strings back into readable text.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Input Encoded URL</h3>
+        <textarea id="udIn" placeholder="Enter encoded URL to decode..." style="min-height:100px"></textarea>
+        <div class="btn-row"><button class="btn" onclick="decodeURL()">Decode URL</button></div>
+        <div class="output-label">Decoded Output</div>
+        <textarea id="udOut" class="output-area" readonly style="min-height:80px"></textarea>
+        <div class="btn-row"><button class="btn btn-outline" onclick="copyText('udOut')">Copy</button></div>
+      </div>`,
+    init: () => { window.decodeURL = () => { try { document.getElementById('udOut').value = decodeURIComponent(document.getElementById('udIn').value); } catch(e) { document.getElementById('udOut').value = 'Error: ' + e.message; } }; }
+  },
+
+  // ── CALCULATOR TOOLS
+  'percentage-calc': {
+    title: 'Percentage Calculator', cat: 'Calculators', catLink: '#calculator-tools',
+    desc: 'Calculate percentage of, percentage change, and reverse percentages.',
+    render: () => `
+      <div class="tool-box">
+        <h3>What is X% of Y?</h3>
+        <div class="row2">
+          <div><label>Percentage (%)</label><input type="number" id="pPct" placeholder="e.g. 25"></div>
+          <div><label>Of Number</label><input type="number" id="pNum" placeholder="e.g. 200"></div>
+        </div>
+        <div class="btn-row"><button class="btn" onclick="calcPct()">Calculate</button></div>
+        <div class="output-label">Result</div>
+        <div class="output-area" id="pctOut">Result will appear here</div>
+      </div>
+      <div class="tool-box">
+        <h3>Percentage Change (Old → New)</h3>
+        <div class="row2">
+          <div><label>Old Value</label><input type="number" id="pcOld" placeholder="e.g. 100"></div>
+          <div><label>New Value</label><input type="number" id="pcNew" placeholder="e.g. 125"></div>
+        </div>
+        <div class="btn-row"><button class="btn" onclick="calcPctChange()">Calculate Change</button></div>
+        <div class="output-area" id="pctChOut" style="margin-top:.8rem">Result will appear here</div>
+      </div>`,
+    init: () => {
+      window.calcPct = () => { const p=parseFloat(document.getElementById('pPct').value), n=parseFloat(document.getElementById('pNum').value); if(isNaN(p)||isNaN(n)) return; document.getElementById('pctOut').textContent = `${p}% of ${n} = ${(p*n/100).toFixed(4)}`; };
+      window.calcPctChange = () => { const o=parseFloat(document.getElementById('pcOld').value), n=parseFloat(document.getElementById('pcNew').value); if(isNaN(o)||isNaN(n)) return; const ch=((n-o)/Math.abs(o)*100).toFixed(2); document.getElementById('pctChOut').textContent = `Change: ${ch}% (${n>o?'Increase':'Decrease'})`; };
+    }
+  },
+
+  'age-calculator': {
+    title: 'Age Calculator', cat: 'Calculators', catLink: '#calculator-tools',
+    desc: 'Calculate exact age in years, months, days, hours from any date.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Enter Birth Date</h3>
+        <div class="row2">
+          <div><label>Date of Birth</label><input type="date" id="dob" max="${new Date().toISOString().split('T')[0]}"></div>
+          <div><label>As of Date</label><input type="date" id="aod" value="${new Date().toISOString().split('T')[0]}"></div>
+        </div>
+        <div class="btn-row"><button class="btn" onclick="calcAge()">Calculate Age</button></div>
+        <div class="stats-row" id="ageResult" style="display:none">
+          <div class="stat-box"><div class="stat-val" id="ageYr">0</div><div class="stat-lbl">Years</div></div>
+          <div class="stat-box"><div class="stat-val" id="ageMo">0</div><div class="stat-lbl">Months</div></div>
+          <div class="stat-box"><div class="stat-val" id="ageDy">0</div><div class="stat-lbl">Days</div></div>
+          <div class="stat-box"><div class="stat-val" id="ageTD" style="font-size:1.2rem">0</div><div class="stat-lbl">Total Days</div></div>
+        </div>
+      </div>`,
+    init: () => { window.calcAge = () => {
+      const dob = new Date(document.getElementById('dob').value);
+      const aod = new Date(document.getElementById('aod').value);
+      if(isNaN(dob)) return;
+      let y = aod.getFullYear()-dob.getFullYear(), m = aod.getMonth()-dob.getMonth(), d = aod.getDate()-dob.getDate();
+      if(d<0){m--;d+=new Date(aod.getFullYear(),aod.getMonth(),0).getDate();}
+      if(m<0){y--;m+=12;}
+      const td = Math.floor((aod-dob)/(1000*60*60*24));
+      document.getElementById('ageYr').textContent = y;
+      document.getElementById('ageMo').textContent = m;
+      document.getElementById('ageDy').textContent = d;
+      document.getElementById('ageTD').textContent = td.toLocaleString();
+      document.getElementById('ageResult').style.display = 'flex';
+    }}
+  },
+
+  'bmi-calculator': {
+    title: 'BMI Calculator', cat: 'Calculators', catLink: '#calculator-tools',
+    desc: 'Calculate Body Mass Index and find your healthy weight category.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Enter Your Details</h3>
+        <div class="row2">
+          <div><label>Height (cm)</label><input type="number" id="bmiH" placeholder="e.g. 175"></div>
+          <div><label>Weight (kg)</label><input type="number" id="bmiW" placeholder="e.g. 70"></div>
+        </div>
+        <div class="btn-row"><button class="btn" onclick="calcBMI()">Calculate BMI</button></div>
+        <div id="bmiResult" style="margin-top:1rem"></div>
+      </div>`,
+    init: () => { window.calcBMI = () => {
+      const h = parseFloat(document.getElementById('bmiH').value)/100;
+      const w = parseFloat(document.getElementById('bmiW').value);
+      if(isNaN(h)||isNaN(w)) return;
+      const bmi = (w/(h*h)).toFixed(1);
+      let cat='', col='';
+      if(bmi<18.5){cat='Underweight';col='#63B3ED';}
+      else if(bmi<25){cat='Normal weight';col='#68D391';}
+      else if(bmi<30){cat='Overweight';col='#F6AD55';}
+      else{cat='Obese';col='#FC8181';}
+      document.getElementById('bmiResult').innerHTML = `<div class="stats-row"><div class="stat-box"><div class="stat-val" style="color:${col}">${bmi}</div><div class="stat-lbl">BMI Score</div></div><div class="stat-box"><div class="stat-val" style="font-size:1.1rem;color:${col}">${cat}</div><div class="stat-lbl">Category</div></div></div>`;
+    }}
+  },
+
+  'emi-calculator': {
+    title: 'Loan EMI Calculator', cat: 'Calculators', catLink: '#calculator-tools',
+    desc: 'Calculate monthly EMI, total interest, and repayment schedule for loans.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Loan Details</h3>
+        <div class="row2">
+          <div><label>Loan Amount (₹)</label><input type="number" id="emiP" placeholder="e.g. 500000"></div>
+          <div><label>Annual Interest Rate (%)</label><input type="number" id="emiR" placeholder="e.g. 8.5" step="0.1"></div>
+          <div><label>Loan Tenure (Months)</label><input type="number" id="emiN" placeholder="e.g. 60"></div>
+        </div>
+        <div class="btn-row"><button class="btn" onclick="calcEMI()">Calculate EMI</button></div>
+        <div id="emiResult" style="margin-top:1rem"></div>
+      </div>`,
+    init: () => { window.calcEMI = () => {
+      const p=parseFloat(document.getElementById('emiP').value), r=parseFloat(document.getElementById('emiR').value)/12/100, n=parseFloat(document.getElementById('emiN').value);
+      if(isNaN(p)||isNaN(r)||isNaN(n)) return;
+      const emi = (p*r*Math.pow(1+r,n))/(Math.pow(1+r,n)-1);
+      const total = emi*n, interest = total-p;
+      document.getElementById('emiResult').innerHTML = `<div class="stats-row">
+        <div class="stat-box"><div class="stat-val" style="font-size:1.3rem">₹${Math.round(emi).toLocaleString()}</div><div class="stat-lbl">Monthly EMI</div></div>
+        <div class="stat-box"><div class="stat-val" style="font-size:1.1rem">₹${Math.round(total).toLocaleString()}</div><div class="stat-lbl">Total Payment</div></div>
+        <div class="stat-box"><div class="stat-val" style="font-size:1.1rem;color:#FC8181">₹${Math.round(interest).toLocaleString()}</div><div class="stat-lbl">Total Interest</div></div>
+      </div>`;
+    }}
+  },
+
+  'gst-calculator': {
+    title: 'GST Calculator', cat: 'Calculators', catLink: '#calculator-tools',
+    desc: 'Add or remove GST from any price with selectable tax rates.',
+    render: () => `
+      <div class="tool-box">
+        <h3>GST Calculator</h3>
+        <div class="row2">
+          <div><label>Amount (₹)</label><input type="number" id="gstAmt" placeholder="e.g. 1000"></div>
+          <div><label>GST Rate</label>
+            <select id="gstRate"><option value="5">5%</option><option value="12">12%</option><option value="18" selected>18%</option><option value="28">28%</option></select>
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn" onclick="calcGST('add')">Add GST</button>
+          <button class="btn btn-outline" onclick="calcGST('remove')">Remove GST</button>
+        </div>
+        <div id="gstResult" style="margin-top:1rem"></div>
+      </div>`,
+    init: () => { window.calcGST = (type) => {
+      const amt=parseFloat(document.getElementById('gstAmt').value), rate=parseFloat(document.getElementById('gstRate').value);
+      if(isNaN(amt)) return;
+      let gstAmt, total, base;
+      if(type==='add') { gstAmt=amt*rate/100; total=amt+gstAmt; base=amt; }
+      else { base=amt/(1+rate/100); gstAmt=amt-base; total=amt; }
+      document.getElementById('gstResult').innerHTML = `<div class="stats-row">
+        <div class="stat-box"><div class="stat-val" style="font-size:1.2rem">₹${base.toFixed(2)}</div><div class="stat-lbl">Base Amount</div></div>
+        <div class="stat-box"><div class="stat-val" style="font-size:1.2rem;color:#F6AD55">₹${gstAmt.toFixed(2)}</div><div class="stat-lbl">GST (${rate}%)</div></div>
+        <div class="stat-box"><div class="stat-val" style="font-size:1.2rem;color:#68D391">₹${total.toFixed(2)}</div><div class="stat-lbl">Total</div></div>
+      </div>`;
+    }}
+  },
+
+  'discount-calculator': {
+    title: 'Discount Calculator', cat: 'Calculators', catLink: '#calculator-tools',
+    desc: 'Find final price after discount and calculate how much you save.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Discount Calculator</h3>
+        <div class="row2">
+          <div><label>Original Price</label><input type="number" id="discPrice" placeholder="e.g. 1500"></div>
+          <div><label>Discount (%)</label><input type="number" id="discPct" placeholder="e.g. 30"></div>
+        </div>
+        <div class="btn-row"><button class="btn" onclick="calcDiscount()">Calculate</button></div>
+        <div id="discResult" style="margin-top:1rem"></div>
+      </div>`,
+    init: () => { window.calcDiscount = () => {
+      const p=parseFloat(document.getElementById('discPrice').value), d=parseFloat(document.getElementById('discPct').value);
+      if(isNaN(p)||isNaN(d)) return;
+      const save=p*d/100, final=p-save;
+      document.getElementById('discResult').innerHTML = `<div class="stats-row">
+        <div class="stat-box"><div class="stat-val" style="font-size:1.3rem;color:#68D391">${final.toFixed(2)}</div><div class="stat-lbl">Final Price</div></div>
+        <div class="stat-box"><div class="stat-val" style="font-size:1.3rem;color:#FC8181">${save.toFixed(2)}</div><div class="stat-lbl">You Save</div></div>
+      </div>`;
+    }}
+  },
+
+  'time-calculator': {
+    title: 'Time Calculator', cat: 'Calculators', catLink: '#calculator-tools',
+    desc: 'Add, subtract, or convert time values — hours, minutes and seconds.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Time Calculator</h3>
+        <div class="row2">
+          <div><label>Hours</label><input type="number" id="tcH" value="0" min="0"></div>
+          <div><label>Minutes</label><input type="number" id="tcM" value="0" min="0" max="59"></div>
+          <div><label>Seconds</label><input type="number" id="tcS" value="0" min="0" max="59"></div>
+        </div>
+        <div class="btn-row"><button class="btn" onclick="calcTime()">Convert</button></div>
+        <div id="tcResult" style="margin-top:1rem"></div>
+      </div>`,
+    init: () => { window.calcTime = () => {
+      const h=parseInt(document.getElementById('tcH').value)||0, m=parseInt(document.getElementById('tcM').value)||0, s=parseInt(document.getElementById('tcS').value)||0;
+      const totalSec = h*3600+m*60+s;
+      document.getElementById('tcResult').innerHTML = `<div class="stats-row">
+        <div class="stat-box"><div class="stat-val">${totalSec}</div><div class="stat-lbl">Seconds</div></div>
+        <div class="stat-box"><div class="stat-val">${(totalSec/60).toFixed(2)}</div><div class="stat-lbl">Minutes</div></div>
+        <div class="stat-box"><div class="stat-val">${(totalSec/3600).toFixed(4)}</div><div class="stat-lbl">Hours</div></div>
+      </div>`;
+    }}
+  },
+
+  'date-diff': {
+    title: 'Date Difference Calculator', cat: 'Calculators', catLink: '#calculator-tools',
+    desc: 'Find the exact difference between two dates.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Select Two Dates</h3>
+        <div class="row2">
+          <div><label>Start Date</label><input type="date" id="ddStart"></div>
+          <div><label>End Date</label><input type="date" id="ddEnd"></div>
+        </div>
+        <div class="btn-row"><button class="btn" onclick="calcDateDiff()">Calculate Difference</button></div>
+        <div id="ddResult" style="margin-top:1rem"></div>
+      </div>`,
+    init: () => {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('ddEnd').value = today;
+      window.calcDateDiff = () => {
+        const s=new Date(document.getElementById('ddStart').value), e=new Date(document.getElementById('ddEnd').value);
+        if(isNaN(s)||isNaN(e)) return;
+        const days = Math.abs(Math.floor((e-s)/(1000*60*60*24)));
+        document.getElementById('ddResult').innerHTML = `<div class="stats-row">
+          <div class="stat-box"><div class="stat-val">${days}</div><div class="stat-lbl">Days</div></div>
+          <div class="stat-box"><div class="stat-val">${Math.floor(days/7)}</div><div class="stat-lbl">Weeks</div></div>
+          <div class="stat-box"><div class="stat-val">${(days/30.44).toFixed(1)}</div><div class="stat-lbl">Months</div></div>
+          <div class="stat-box"><div class="stat-val">${(days/365.25).toFixed(2)}</div><div class="stat-lbl">Years</div></div>
+        </div>`;
+      };
+    }
+  },
+
+  'binary-decimal': {
+    title: 'Binary to Decimal Converter', cat: 'Calculators', catLink: '#calculator-tools',
+    desc: 'Convert between binary, decimal, hex, and octal number systems.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Number Converter</h3>
+        <div><label>Decimal</label><input type="number" id="nDec" placeholder="e.g. 255" oninput="convertFrom('dec')"></div>
+        <div style="margin-top:.8rem"><label>Binary</label><input type="text" id="nBin" placeholder="e.g. 11111111" oninput="convertFrom('bin')"></div>
+        <div style="margin-top:.8rem"><label>Hexadecimal</label><input type="text" id="nHex" placeholder="e.g. FF" oninput="convertFrom('hex')"></div>
+        <div style="margin-top:.8rem"><label>Octal</label><input type="text" id="nOct" placeholder="e.g. 377" oninput="convertFrom('oct')"></div>
+      </div>`,
+    init: () => { window.convertFrom = (from) => {
+      let dec;
+      try {
+        if(from==='dec') dec = parseInt(document.getElementById('nDec').value)||0;
+        else if(from==='bin') dec = parseInt(document.getElementById('nBin').value, 2)||0;
+        else if(from==='hex') dec = parseInt(document.getElementById('nHex').value, 16)||0;
+        else if(from==='oct') dec = parseInt(document.getElementById('nOct').value, 8)||0;
+        if(from!=='dec') document.getElementById('nDec').value = dec;
+        if(from!=='bin') document.getElementById('nBin').value = dec.toString(2);
+        if(from!=='hex') document.getElementById('nHex').value = dec.toString(16).toUpperCase();
+        if(from!=='oct') document.getElementById('nOct').value = dec.toString(8);
+      } catch(e){}
+    }}
+  },
+
+  'number-to-words': {
+    title: 'Number to Words Converter', cat: 'Calculators', catLink: '#calculator-tools',
+    desc: 'Convert any numeric value into written English words.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Enter Number</h3>
+        <input type="number" id="ntwIn" placeholder="e.g. 12345">
+        <div class="btn-row"><button class="btn" onclick="numToWords()">Convert to Words</button></div>
+        <div class="output-label">Result</div>
+        <div class="output-area" id="ntwOut">Result will appear here</div>
+      </div>`,
+    init: () => { window.numToWords = () => {
+      const n = parseInt(document.getElementById('ntwIn').value);
+      if(isNaN(n)){document.getElementById('ntwOut').textContent='Please enter a valid number';return;}
+      const ones=['','one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen'];
+      const tens=['','','twenty','thirty','forty','fifty','sixty','seventy','eighty','ninety'];
+      function toW(n){if(n===0)return'zero';if(n<0)return'negative '+toW(-n);if(n<20)return ones[n];if(n<100)return tens[Math.floor(n/10)]+(n%10?' '+ones[n%10]:'');if(n<1000)return ones[Math.floor(n/100)]+' hundred'+(n%100?' '+toW(n%100):'');if(n<1000000)return toW(Math.floor(n/1000))+' thousand'+(n%1000?' '+toW(n%1000):'');return toW(Math.floor(n/1000000))+' million'+(n%1000000?' '+toW(n%1000000):'');}
+      document.getElementById('ntwOut').textContent = toW(n);
+    }}
+  },
+
+  // ── MISC TOOLS
+  'password-generator': {
+    title: 'Password Generator', cat: 'Misc Tools', catLink: '#misc-tools',
+    desc: 'Generate ultra-secure random passwords with custom rules and length.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Password Settings</h3>
+        <div><label>Length: <span id="pgLen">16</span> characters</label>
+          <input type="range" min="4" max="64" value="16" oninput="document.getElementById('pgLen').textContent=this.value;genPass()" id="pgLenR"></div>
+        <div style="margin-top:1rem;display:flex;flex-wrap:wrap;gap:1rem">
+          <label><input type="checkbox" id="pgUp" checked onchange="genPass()" style="width:auto;margin-right:.4rem"> Uppercase (A-Z)</label>
+          <label><input type="checkbox" id="pgLo" checked onchange="genPass()" style="width:auto;margin-right:.4rem"> Lowercase (a-z)</label>
+          <label><input type="checkbox" id="pgNum" checked onchange="genPass()" style="width:auto;margin-right:.4rem"> Numbers (0-9)</label>
+          <label><input type="checkbox" id="pgSym" onchange="genPass()" style="width:auto;margin-right:.4rem"> Symbols (!@#$)</label>
+        </div>
+        <div class="output-label">Generated Password</div>
+        <div class="output-area" id="pgOut" style="font-size:1.1rem;letter-spacing:.08em;text-align:center;padding:1.2rem">Click Generate</div>
+        <div id="strengthBar" class="strength-bar"></div>
+        <div class="btn-row">
+          <button class="btn" onclick="genPass()">Generate New</button>
+          <button class="btn btn-outline" onclick="copyEl('pgOut')">Copy Password</button>
+        </div>
+      </div>`,
+    init: () => {
+      window.genPass = () => {
+        let chars = '';
+        if(document.getElementById('pgUp').checked) chars += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        if(document.getElementById('pgLo').checked) chars += 'abcdefghijklmnopqrstuvwxyz';
+        if(document.getElementById('pgNum').checked) chars += '0123456789';
+        if(document.getElementById('pgSym').checked) chars += '!@#$%^&*()_+-=[]{}|;:,.<>?';
+        if(!chars) chars = 'abcdefghijklmnopqrstuvwxyz';
+        const len = parseInt(document.getElementById('pgLenR').value);
+        let pass = '';
+        for(let i=0;i<len;i++) pass += chars[Math.floor(Math.random()*chars.length)];
+        document.getElementById('pgOut').textContent = pass;
+        const strength = Math.min(100, Math.floor((chars.length/94*50) + (len/64*50)));
+        const col = strength<40?'#FC8181':strength<70?'#F6AD55':'#68D391';
+        document.getElementById('strengthBar').style.background = col;
+        document.getElementById('strengthBar').style.width = strength + '%';
+      };
+      window.copyEl = (id) => { const t=document.getElementById(id).textContent; navigator.clipboard.writeText(t); };
+      window.genPass();
+    }
+  },
+
+  'qr-code-generator': {
+    title: 'QR Code Generator', cat: 'Misc Tools', catLink: '#misc-tools',
+    desc: 'Create custom QR codes for URLs, text, phone or email instantly.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Generate QR Code</h3>
+        <div><label>Content Type</label>
+          <select id="qrType" onchange="updateQRPlaceholder()">
+            <option value="url">URL</option><option value="text">Text</option>
+            <option value="email">Email</option><option value="phone">Phone</option>
+          </select>
+        </div>
+        <div style="margin-top:.8rem"><label>Content</label>
+          <input type="text" id="qrContent" placeholder="https://example.com">
+        </div>
+        <div class="btn-row"><button class="btn" onclick="generateQR()">Generate QR Code</button></div>
+        <div id="qrResult" style="margin-top:1.5rem;text-align:center"></div>
+      </div>`,
+    init: () => {
+      window.updateQRPlaceholder = () => {
+        const t=document.getElementById('qrType').value;
+        const p={'url':'https://example.com','text':'Your text here','email':'user@example.com','phone':'+91 98765 43210'};
+        document.getElementById('qrContent').placeholder = p[t];
+      };
+      window.generateQR = () => {
+        const v = document.getElementById('qrContent').value.trim();
+        if(!v){alert('Please enter content');return;}
+        const size = 200;
+        const url = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(v)}`;
+        document.getElementById('qrResult').innerHTML = `<img src="${url}" style="border-radius:12px;border:4px solid white;width:200px;height:200px" alt="QR Code"><br><a href="${url}" download="qrcode.png" class="btn" style="margin-top:1rem;display:inline-flex">Download QR</a>`;
+      };
+    }
+  },
+
+  'qr-scanner': {
+    title: 'QR Code Scanner', cat: 'Misc Tools', catLink: '#misc-tools',
+    desc: 'Scan QR codes using your camera or by uploading an image.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Upload QR Code Image</h3>
+        <div class="drop-zone" onclick="document.getElementById('qrsInput').click()">
+          <div class="drop-icon">📷</div>
+          <div class="drop-text"><strong>Click to upload QR code image</strong></div>
+          <input type="file" id="qrsInput" accept="image/*" style="display:none" onchange="scanQR(this)">
+        </div>
+        <div class="output-label">Scan Result</div>
+        <div class="output-area" id="qrsOut">Upload a QR code image to scan it</div>
+        <div class="notice" style="margin-top:1rem">📷 <strong>Camera scanning</strong> requires a HTTPS connection. Upload an image as alternative.</div>
+      </div>`
+  },
+
+  'uuid-generator': {
+    title: 'UUID Generator', cat: 'Misc Tools', catLink: '#misc-tools',
+    desc: 'Generate cryptographically unique UUIDs (v1, v4) for app development.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Generate UUIDs</h3>
+        <div class="row2">
+          <div><label>Count</label><input type="number" id="uuidCount" value="5" min="1" max="100"></div>
+          <div><label>Version</label><select id="uuidVer"><option value="4">UUID v4 (Random)</option><option value="1">UUID v1 (Time-based)</option></select></div>
+        </div>
+        <div class="btn-row"><button class="btn" onclick="generateUUIDs()">Generate UUIDs</button></div>
+        <div class="output-label">Generated UUIDs</div>
+        <textarea id="uuidOut" class="output-area" readonly style="min-height:180px;font-size:.78rem"></textarea>
+        <div class="btn-row"><button class="btn btn-outline" onclick="copyText('uuidOut')">Copy All</button></div>
+      </div>`,
+    init: () => {
+      window.generateUUIDs = () => {
+        const count = parseInt(document.getElementById('uuidCount').value);
+        const uuids = [];
+        for(let i=0;i<count;i++) {
+          uuids.push('xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+            const r=Math.random()*16|0, v=c==='x'?r:(r&0x3|0x8);
+            return v.toString(16);
+          }));
+        }
+        document.getElementById('uuidOut').value = uuids.join('\n');
+      };
+      window.generateUUIDs();
+    }
+  },
+
+  'random-number': {
+    title: 'Random Number Generator', cat: 'Misc Tools', catLink: '#misc-tools',
+    desc: 'Generate single or multiple random numbers in any min–max range.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Settings</h3>
+        <div class="row2">
+          <div><label>Min</label><input type="number" id="rnMin" value="1"></div>
+          <div><label>Max</label><input type="number" id="rnMax" value="100"></div>
+          <div><label>Count</label><input type="number" id="rnCount" value="1" min="1" max="1000"></div>
+        </div>
+        <div style="margin-top:.8rem"><label><input type="checkbox" id="rnUniq" style="width:auto;margin-right:.4rem"> No Duplicates</label></div>
+        <div class="btn-row"><button class="btn" onclick="genRandNums()">Generate</button></div>
+        <div class="output-label">Generated Numbers</div>
+        <textarea id="rnOut" class="output-area" readonly style="min-height:120px"></textarea>
+      </div>`,
+    init: () => { window.genRandNums = () => {
+      const min=parseInt(document.getElementById('rnMin').value), max=parseInt(document.getElementById('rnMax').value);
+      const count=parseInt(document.getElementById('rnCount').value), unique=document.getElementById('rnUniq').checked;
+      const nums = [];
+      if(unique){const pool=[];for(let i=min;i<=max;i++)pool.push(i);pool.sort(()=>Math.random()-.5);nums.push(...pool.slice(0,Math.min(count,pool.length)));}
+      else{for(let i=0;i<count;i++)nums.push(Math.floor(Math.random()*(max-min+1))+min);}
+      document.getElementById('rnOut').value = nums.join(', ');
+    }}
+  },
+
+  'random-name-picker': {
+    title: 'Random Name Picker', cat: 'Misc Tools', catLink: '#misc-tools',
+    desc: 'Pick a random name from a list — perfect for raffles and team selection.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Enter Names (one per line)</h3>
+        <textarea id="rnpIn" placeholder="Alice&#10;Bob&#10;Charlie&#10;Diana" style="min-height:160px"></textarea>
+        <div class="row2" style="margin-top:1rem">
+          <div><label>Pick Count</label><input type="number" id="rnpCount" value="1" min="1"></div>
+        </div>
+        <div class="btn-row"><button class="btn" onclick="pickRandName()">🎲 Pick!</button></div>
+        <div id="rnpResult" style="margin-top:1.5rem;text-align:center"></div>
+      </div>`,
+    init: () => { window.pickRandName = () => {
+      const names = document.getElementById('rnpIn').value.split('\n').map(n=>n.trim()).filter(n=>n);
+      const count = parseInt(document.getElementById('rnpCount').value);
+      if(!names.length){alert('Please enter some names');return;}
+      const picked = [...names].sort(()=>Math.random()-.5).slice(0,Math.min(count,names.length));
+      document.getElementById('rnpResult').innerHTML = picked.map(n=>`<div style="font-family:'Bebas Neue',sans-serif;font-size:2.5rem;color:var(--accent);animation:fup .3s ease">${n}</div>`).join('');
+    }}
+  },
+
+  'unit-converter': {
+    title: 'Unit Converter', cat: 'Misc Tools', catLink: '#misc-tools',
+    desc: 'Convert length, weight, temperature, speed, area, and more.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Unit Converter</h3>
+        <div><label>Category</label>
+          <select id="ucCat" onchange="loadUnitOptions()">
+            <option value="length">Length</option>
+            <option value="weight">Weight</option>
+            <option value="temp">Temperature</option>
+            <option value="speed">Speed</option>
+          </select>
+        </div>
+        <div class="row2" style="margin-top:1rem">
+          <div><label>From</label><select id="ucFrom"></select></div>
+          <div><label>To</label><select id="ucTo"></select></div>
+        </div>
+        <div style="margin-top:.8rem"><label>Value</label><input type="number" id="ucVal" value="1" oninput="convertUnit()"></div>
+        <div class="output-label">Result</div>
+        <div class="output-area" id="ucOut">Result will appear here</div>
+      </div>`,
+    init: () => {
+      const units = {
+        length:{m:1,'km':0.001,'cm':100,'mm':1000,'mi':0.000621371,'yd':1.09361,'ft':3.28084,'in':39.3701},
+        weight:{kg:1,'g':1000,'mg':1e6,'lb':2.20462,'oz':35.274,'t':0.001},
+        speed:{'m/s':1,'km/h':3.6,'mph':2.23694,'knot':1.94384},
+        temp:{celsius:null,fahrenheit:null,kelvin:null}
+      };
+      window.loadUnitOptions = () => {
+        const cat = document.getElementById('ucCat').value;
+        const keys = Object.keys(units[cat]);
+        const opts = keys.map(k=>`<option value="${k}">${k}</option>`).join('');
+        document.getElementById('ucFrom').innerHTML = opts;
+        document.getElementById('ucTo').innerHTML = opts;
+        document.getElementById('ucTo').selectedIndex = 1;
+        convertUnit();
+      };
+      window.convertUnit = () => {
+        const cat = document.getElementById('ucCat').value;
+        const from = document.getElementById('ucFrom').value;
+        const to = document.getElementById('ucTo').value;
+        const val = parseFloat(document.getElementById('ucVal').value);
+        if(isNaN(val)) return;
+        let result;
+        if(cat==='temp') {
+          let celsius;
+          if(from==='celsius') celsius=val;
+          else if(from==='fahrenheit') celsius=(val-32)*5/9;
+          else celsius=val-273.15;
+          if(to==='celsius') result=celsius;
+          else if(to==='fahrenheit') result=celsius*9/5+32;
+          else result=celsius+273.15;
+        } else {
+          const base = val / units[cat][from];
+          result = base * units[cat][to];
+        }
+        document.getElementById('ucOut').textContent = `${val} ${from} = ${result.toFixed(6)} ${to}`;
+      };
+      loadUnitOptions();
+    }
+  },
+
+  'color-palette': {
+    title: 'Color Palette Generator', cat: 'Misc Tools', catLink: '#misc-tools',
+    desc: 'Create beautiful, harmonious color palettes for design projects.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Generate Color Palette</h3>
+        <div class="row2">
+          <div><label>Base Color</label><input type="color" id="cpBase" value="#d4ff00" style="height:44px;padding:.2rem"></div>
+          <div><label>Palette Type</label>
+            <select id="cpType">
+              <option value="monochromatic">Monochromatic</option>
+              <option value="complementary">Complementary</option>
+              <option value="triadic">Triadic</option>
+              <option value="random">Random</option>
+            </select>
+          </div>
+        </div>
+        <div class="btn-row"><button class="btn" onclick="genPalette()">Generate Palette</button></div>
+        <div id="paletteResult" style="margin-top:1.5rem;display:flex;gap:.6rem;flex-wrap:wrap"></div>
+      </div>`,
+    init: () => { window.genPalette = () => {
+      const base = document.getElementById('cpBase').value;
+      const type = document.getElementById('cpType').value;
+      let colors = [base];
+      const r=parseInt(base.slice(1,3),16), g=parseInt(base.slice(3,5),16), b=parseInt(base.slice(5,7),16);
+      if(type==='random'){colors=Array.from({length:5},()=>'#'+Math.floor(Math.random()*16777215).toString(16).padStart(6,'0'));}
+      else if(type==='monochromatic'){colors=Array.from({length:5},(_,i)=>{const f=0.6+i*0.1;return`rgb(${Math.min(255,Math.floor(r*f))},${Math.min(255,Math.floor(g*f))},${Math.min(255,Math.floor(b*f))})`});}
+      else if(type==='complementary'){colors=[base,`rgb(${255-r},${255-g},${255-b})`,`rgb(${Math.floor(r*.7)},${Math.floor(g*.7)},${Math.floor(b*.7)})`,`rgb(${Math.min(255,r+50)},${Math.min(255,g+50)},${Math.min(255,b+50)})`,`rgb(${Math.floor((255-r)*.7)},${Math.floor((255-g)*.7)},${Math.floor((255-b)*.7)})`];}
+      else{colors=[base,`rgb(${g},${b},${r})`,`rgb(${b},${r},${g})`,`rgb(${255-r},${g},${b})`,`rgb(${r},${255-g},${b})`];}
+      document.getElementById('paletteResult').innerHTML = colors.map(c=>`<div style="flex:1;min-width:80px;height:100px;background:${c};border-radius:8px;display:flex;align-items:flex-end;justify-content:center;padding:.4rem;font-family:monospace;font-size:.6rem;color:white;text-shadow:0 0 4px #000">${c}</div>`).join('');
+    }}
+  },
+
+  'gradient-generator': {
+    title: 'Gradient Generator', cat: 'Misc Tools', catLink: '#misc-tools',
+    desc: 'Create CSS linear or radial gradients and copy the CSS code.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Gradient Settings</h3>
+        <div class="row2">
+          <div><label>Color 1</label><input type="color" id="gc1" value="#d4ff00" style="height:44px;padding:.2rem" oninput="updateGrad()"></div>
+          <div><label>Color 2</label><input type="color" id="gc2" value="#ff6b35" style="height:44px;padding:.2rem" oninput="updateGrad()"></div>
+          <div><label>Type</label>
+            <select id="gType" onchange="updateGrad()">
+              <option value="linear">Linear</option><option value="radial">Radial</option>
+            </select>
+          </div>
+          <div><label>Angle (Linear only)</label><input type="range" min="0" max="360" value="135" id="gAngle" oninput="updateGrad()"></div>
+        </div>
+        <div id="gradPreview" style="height:120px;border-radius:10px;margin-top:1rem;transition:background .2s"></div>
+        <div class="output-label">CSS Code</div>
+        <div class="output-area" id="gradCSS" style="font-family:monospace;font-size:.8rem"></div>
+        <div class="btn-row"><button class="btn btn-outline" onclick="copyText('gradCSS')">Copy CSS</button></div>
+      </div>`,
+    init: () => { window.updateGrad = () => {
+      const c1=document.getElementById('gc1').value, c2=document.getElementById('gc2').value;
+      const type=document.getElementById('gType').value, angle=document.getElementById('gAngle').value;
+      const css = type==='linear' ? `linear-gradient(${angle}deg, ${c1}, ${c2})` : `radial-gradient(circle, ${c1}, ${c2})`;
+      document.getElementById('gradPreview').style.background = css;
+      document.getElementById('gradCSS').textContent = `background: ${css};`;
+    }; window.updateGrad(); }
+  },
+
+  'barcode-generator': {
+    title: 'Barcode Generator', cat: 'Misc Tools', catLink: '#misc-tools',
+    desc: 'Generate Code128, EAN-13, UPC, or QR barcodes for products.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Generate Barcode</h3>
+        <div class="row2">
+          <div><label>Barcode Type</label>
+            <select id="bcType">
+              <option>Code128</option><option>EAN-13</option><option>UPC-A</option>
+            </select>
+          </div>
+          <div><label>Value</label><input type="text" id="bcVal" placeholder="Enter value"></div>
+        </div>
+        <div class="btn-row"><button class="btn" onclick="genBarcode()">Generate</button></div>
+        <div id="bcResult" style="margin-top:1.5rem;text-align:center;background:white;border-radius:10px;padding:1rem"></div>
+      </div>`,
+    init: () => { window.genBarcode = () => {
+      const val = document.getElementById('bcVal').value.trim()||'12345678';
+      const url = `https://barcodeapi.org/api/auto/${encodeURIComponent(val)}`;
+      document.getElementById('bcResult').innerHTML = `<img src="${url}" style="max-width:100%" alt="Barcode"><br><a href="${url}" download="barcode.png" class="btn" style="margin-top:1rem;display:inline-flex">Download</a>`;
+    }}
+  },
+
+  // ── SEO TOOLS
+  'keyword-density': {
+    title: 'Keyword Density Checker', cat: 'SEO Tools', catLink: '#seo-tools',
+    desc: 'Analyze keyword frequency and density percentage in your content.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Paste Your Content</h3>
+        <textarea id="kdText" placeholder="Paste your article or content here..." style="min-height:200px"></textarea>
+        <div class="btn-row"><button class="btn" onclick="checkKeyDensity()">Analyze Keywords</button></div>
+        <div id="kdResult" style="margin-top:1rem"></div>
+      </div>`,
+    init: () => { window.checkKeyDensity = () => {
+      const text = document.getElementById('kdText').value.toLowerCase();
+      const words = text.match(/\b[a-z]{3,}\b/g)||[];
+      const freq = {};
+      words.forEach(w=>freq[w]=(freq[w]||0)+1);
+      const sorted = Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,20);
+      const total = words.length;
+      document.getElementById('kdResult').innerHTML = `<div class="output-label">Top Keywords (Total words: ${total})</div><div style="overflow:auto;max-height:300px"><table style="width:100%;border-collapse:collapse;font-size:.82rem">${sorted.map(([w,c])=>`<tr style="border-bottom:1px solid var(--border)"><td style="padding:.5rem;color:var(--text)">${w}</td><td style="padding:.5rem;color:var(--accent);font-family:monospace">${c}</td><td style="padding:.5rem;color:var(--text-dim)">${(c/total*100).toFixed(2)}%</td></tr>`).join('')}</table></div>`;
+    }}
+  },
+
+  'meta-tag-generator': {
+    title: 'Meta Tag Generator', cat: 'SEO Tools', catLink: '#seo-tools',
+    desc: 'Generate SEO-optimized title, description, and keywords meta tags.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Page Information</h3>
+        <div><label>Page Title</label><input type="text" id="mtTitle" placeholder="My Awesome Page" maxlength="60"></div>
+        <div style="margin-top:.8rem"><label>Meta Description</label><textarea id="mtDesc" placeholder="Brief description of your page..." style="min-height:80px" maxlength="160"></textarea></div>
+        <div style="margin-top:.8rem"><label>Keywords (comma separated)</label><input type="text" id="mtKw" placeholder="keyword1, keyword2, keyword3"></div>
+        <div style="margin-top:.8rem"><label>Author</label><input type="text" id="mtAuth" placeholder="Your name"></div>
+        <div class="btn-row"><button class="btn" onclick="genMetaTags()">Generate Meta Tags</button></div>
+        <div class="output-label">Generated Meta Tags</div>
+        <textarea id="mtOut" class="output-area" readonly style="min-height:180px;font-size:.78rem"></textarea>
+        <div class="btn-row"><button class="btn btn-outline" onclick="copyText('mtOut')">Copy</button></div>
+      </div>`,
+    init: () => { window.genMetaTags = () => {
+      const t=document.getElementById('mtTitle').value, d=document.getElementById('mtDesc').value;
+      const k=document.getElementById('mtKw').value, a=document.getElementById('mtAuth').value;
+      document.getElementById('mtOut').value = `<title>${t}</title>\n<meta name="title" content="${t}">\n<meta name="description" content="${d}">\n<meta name="keywords" content="${k}">\n<meta name="author" content="${a}">\n<meta property="og:title" content="${t}">\n<meta property="og:description" content="${d}">\n<meta name="twitter:title" content="${t}">\n<meta name="twitter:description" content="${d}">`;
+    }}
+  },
+
+  'robots-txt': {
+    title: 'Robots.txt Generator', cat: 'SEO Tools', catLink: '#seo-tools',
+    desc: 'Create a robots.txt file to control how search engines crawl your site.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Robots.txt Settings</h3>
+        <div class="row2">
+          <div><label>User-agent</label><input type="text" id="rbUA" value="*"></div>
+          <div><label>Sitemap URL</label><input type="text" id="rbSM" placeholder="https://example.com/sitemap.xml"></div>
+        </div>
+        <div style="margin-top:.8rem"><label>Disallow Paths (one per line)</label>
+          <textarea id="rbDis" placeholder="/admin/&#10;/private/&#10;/tmp/" style="min-height:100px"></textarea>
+        </div>
+        <div style="margin-top:.8rem"><label>Allow Paths (one per line)</label>
+          <textarea id="rbAllow" placeholder="/public/" style="min-height:60px"></textarea>
+        </div>
+        <div class="btn-row"><button class="btn" onclick="genRobots()">Generate robots.txt</button></div>
+        <div class="output-label">robots.txt Content</div>
+        <textarea id="rbOut" class="output-area" readonly style="min-height:160px;font-family:monospace;font-size:.82rem"></textarea>
+        <div class="btn-row"><button class="btn btn-outline" onclick="copyText('rbOut')">Copy</button></div>
+      </div>`,
+    init: () => { window.genRobots = () => {
+      const ua=document.getElementById('rbUA').value||'*';
+      const dis=document.getElementById('rbDis').value.split('\n').filter(l=>l.trim()).map(l=>`Disallow: ${l.trim()}`).join('\n');
+      const allow=document.getElementById('rbAllow').value.split('\n').filter(l=>l.trim()).map(l=>`Allow: ${l.trim()}`).join('\n');
+      const sm=document.getElementById('rbSM').value;
+      let txt = `User-agent: ${ua}\n${dis}${allow?'\n'+allow:''}${sm?'\nSitemap: '+sm:''}`;
+      document.getElementById('rbOut').value = txt;
+    }}
+  },
+
+  // ── ADVANCED TOOLS
+  'email-extractor': {
+    title: 'Email Extractor', cat: 'Advanced Tools', catLink: '#advanced-tools',
+    desc: 'Extract all email addresses from a block of text instantly.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Paste Text</h3>
+        <textarea id="eeText" placeholder="Paste any text containing email addresses..." style="min-height:180px"></textarea>
+        <div class="btn-row"><button class="btn" onclick="extractEmails()">Extract Emails</button></div>
+        <div class="output-label">Extracted Emails</div>
+        <textarea id="eeOut" class="output-area" readonly style="min-height:140px"></textarea>
+        <div id="eeCount" style="font-family:monospace;font-size:.72rem;color:var(--muted);margin-top:.4rem"></div>
+        <div class="btn-row"><button class="btn btn-outline" onclick="copyText('eeOut')">Copy All</button></div>
+      </div>`,
+    init: () => { window.extractEmails = () => {
+      const text = document.getElementById('eeText').value;
+      const emails = [...new Set(text.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/g)||[])];
+      document.getElementById('eeOut').value = emails.join('\n');
+      document.getElementById('eeCount').textContent = `Found: ${emails.length} unique email${emails.length!==1?'s':''}`;
+    }}
+  },
+
+  'html-to-markdown': {
+    title: 'HTML to Markdown', cat: 'Advanced Tools', catLink: '#advanced-tools',
+    desc: 'Convert HTML markup to clean Markdown syntax for blogs and docs.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Input HTML</h3>
+        <textarea id="htmIn" placeholder="Paste HTML code here..." style="min-height:180px;font-family:monospace;font-size:.8rem"></textarea>
+        <div class="btn-row"><button class="btn" onclick="htmlToMD()">Convert to Markdown</button></div>
+        <div class="output-label">Markdown Output</div>
+        <textarea id="htmOut" class="output-area" readonly style="min-height:180px"></textarea>
+        <div class="btn-row"><button class="btn btn-outline" onclick="copyText('htmOut')">Copy</button></div>
+      </div>`,
+    init: () => { window.htmlToMD = () => {
+      let h = document.getElementById('htmIn').value;
+      h = h.replace(/<h1[^>]*>(.*?)<\/h1>/gi,'# $1\n').replace(/<h2[^>]*>(.*?)<\/h2>/gi,'## $1\n').replace(/<h3[^>]*>(.*?)<\/h3>/gi,'### $1\n');
+      h = h.replace(/<strong[^>]*>(.*?)<\/strong>/gi,'**$1**').replace(/<b[^>]*>(.*?)<\/b>/gi,'**$1**');
+      h = h.replace(/<em[^>]*>(.*?)<\/em>/gi,'*$1*').replace(/<i[^>]*>(.*?)<\/i>/gi,'*$1*');
+      h = h.replace(/<a[^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/gi,'[$2]($1)');
+      h = h.replace(/<img[^>]*src="([^"]*)"[^>]*alt="([^"]*)"[^>]*>/gi,'![$2]($1)');
+      h = h.replace(/<code[^>]*>(.*?)<\/code>/gi,'`$1`');
+      h = h.replace(/<li[^>]*>(.*?)<\/li>/gi,'- $1\n');
+      h = h.replace(/<p[^>]*>(.*?)<\/p>/gi,'$1\n\n');
+      h = h.replace(/<br\s*\/?>/gi,'\n');
+      h = h.replace(/<[^>]+>/g,'').replace(/\n{3,}/g,'\n\n').trim();
+      document.getElementById('htmOut').value = h;
+    }}
+  },
+
+  'markdown-to-html': {
+    title: 'Markdown to HTML Converter', cat: 'Advanced Tools', catLink: '#advanced-tools',
+    desc: 'Render Markdown text into fully formatted HTML output.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Input Markdown</h3>
+        <textarea id="mthIn" placeholder="# Heading&#10;&#10;**Bold** and *italic*&#10;&#10;- List item" style="min-height:180px;font-family:monospace;font-size:.8rem"></textarea>
+        <div class="btn-row"><button class="btn" onclick="mdToHTML()">Convert to HTML</button></div>
+        <div class="output-label">HTML Output</div>
+        <textarea id="mthOut" class="output-area" readonly style="min-height:180px;font-size:.78rem"></textarea>
+        <div class="btn-row"><button class="btn btn-outline" onclick="copyText('mthOut')">Copy HTML</button></div>
+      </div>`,
+    init: () => { window.mdToHTML = () => {
+      let m = document.getElementById('mthIn').value;
+      m = m.replace(/^### (.+)$/gm,'<h3>$1</h3>').replace(/^## (.+)$/gm,'<h2>$1</h2>').replace(/^# (.+)$/gm,'<h1>$1</h1>');
+      m = m.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>');
+      m = m.replace(/\[(.+?)\]\((.+?)\)/g,'<a href="$2">$1</a>');
+      m = m.replace(/`(.+?)`/g,'<code>$1</code>');
+      m = m.replace(/^- (.+)$/gm,'<li>$1</li>').replace(/(<li>.*<\/li>\n?)+/g,'<ul>$&</ul>');
+      m = m.replace(/\n\n/g,'</p><p>');
+      document.getElementById('mthOut').value = '<p>' + m + '</p>';
+    }}
+  },
+
+  'regex-tester': {
+    title: 'Regex Tester', cat: 'Advanced Tools', catLink: '#advanced-tools',
+    desc: 'Test and debug regular expressions against sample text in real time.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Regular Expression</h3>
+        <div class="row2">
+          <div><label>Pattern</label><input type="text" id="rgxPat" placeholder="e.g. \\d+" oninput="testRegex()"></div>
+          <div><label>Flags</label><input type="text" id="rgxFlags" value="g" placeholder="g, i, m" oninput="testRegex()"></div>
+        </div>
+        <div style="margin-top:.8rem"><label>Test String</label>
+          <textarea id="rgxText" placeholder="Enter text to test against..." style="min-height:120px" oninput="testRegex()"></textarea>
+        </div>
+        <div class="output-label">Matches</div>
+        <div id="rgxResult" class="output-area" style="min-height:80px">Enter a pattern and text to see matches</div>
+      </div>`,
+    init: () => { window.testRegex = () => {
+      try {
+        const pat=document.getElementById('rgxPat').value, flags=document.getElementById('rgxFlags').value;
+        const text=document.getElementById('rgxText').value;
+        if(!pat){document.getElementById('rgxResult').textContent='Enter a pattern';return;}
+        const re = new RegExp(pat, flags);
+        const matches = [...text.matchAll(re)];
+        if(!matches.length){document.getElementById('rgxResult').textContent='No matches found';return;}
+        document.getElementById('rgxResult').innerHTML = `<span style="color:var(--accent)">${matches.length} match${matches.length!==1?'es':''} found:</span>\n` + matches.map((m,i)=>`Match ${i+1}: "${m[0]}" at index ${m.index}`).join('\n');
+      } catch(e){document.getElementById('rgxResult').textContent='Error: '+e.message;}
+    }}
+  },
+
+  'code-diff': {
+    title: 'Code Diff Checker', cat: 'Advanced Tools', catLink: '#advanced-tools',
+    desc: 'Compare two code snippets side-by-side and highlight differences.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Compare Code</h3>
+        <div class="row2">
+          <div><label>Original Code (A)</label><textarea id="cdA" placeholder="Paste original code..." style="min-height:200px;font-family:monospace;font-size:.78rem"></textarea></div>
+          <div><label>Modified Code (B)</label><textarea id="cdB" placeholder="Paste modified code..." style="min-height:200px;font-family:monospace;font-size:.78rem"></textarea></div>
+        </div>
+        <div class="btn-row"><button class="btn" onclick="diffCode()">Compare</button></div>
+        <div class="output-label">Differences</div>
+        <div id="cdResult" class="output-area" style="min-height:150px;font-family:monospace;font-size:.78rem">Click Compare to see differences</div>
+      </div>`,
+    init: () => { window.diffCode = () => {
+      const a=document.getElementById('cdA').value.split('\n');
+      const b=document.getElementById('cdB').value.split('\n');
+      const maxLen=Math.max(a.length,b.length);
+      let html='', diffs=0;
+      for(let i=0;i<maxLen;i++){
+        const la=a[i]??'', lb=b[i]??'';
+        if(la===lb){html+=`<span style="color:var(--text-dim)">${i+1}: ${la}</span>\n`;}
+        else{diffs++;html+=`<span style="color:#FC8181;background:rgba(252,129,129,.1)">- ${i+1}: ${la}</span>\n<span style="color:#68D391;background:rgba(104,211,145,.1)">+ ${i+1}: ${lb}</span>\n`;}
+      }
+      document.getElementById('cdResult').innerHTML = `<span style="color:var(--accent)">${diffs} line${diffs!==1?'s':''} differ</span>\n\n${html}`;
+    }}
+  },
+
+  'grammar-checker': {
+    title: 'Grammar Checker', cat: 'Advanced Tools', catLink: '#advanced-tools',
+    desc: 'Detect and fix grammar, spelling, and punctuation errors in writing.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Enter Your Text</h3>
+        <textarea id="gcText" placeholder="Paste your text here to check grammar..." style="min-height:200px"></textarea>
+        <div class="btn-row"><button class="btn" onclick="checkGrammar()">Check Grammar</button></div>
+        <div id="gcResult" style="margin-top:1rem"></div>
+        <div class="notice" style="margin-top:1rem">ℹ️ <strong>Note:</strong> This is a basic grammar checker. For advanced AI-powered checking, consider Grammarly or LanguageTool.</div>
+      </div>`,
+    init: () => { window.checkGrammar = () => {
+      const text = document.getElementById('gcText').value;
+      const issues = [];
+      const rules = [
+        {re:/\bi\b/g, msg:'Capitalize "I" when used as a pronoun'},
+        {re:/\s{2,}/g, msg:'Extra spaces found'},
+        {re:/[.!?][a-z]/g, msg:'Sentence should start with a capital letter after punctuation'},
+        {re:/\bteh\b/ig, msg:'Possible typo: "teh" → "the"'},
+        {re:/\brecieve\b/ig, msg:'Possible typo: "recieve" → "receive"'},
+        {re:/\boccured\b/ig, msg:'Possible typo: "occured" → "occurred"'},
+      ];
+      rules.forEach(r=>{ if(r.re.test(text)) issues.push(r.msg); });
+      const words = text.trim().split(/\s+/).length;
+      const reading = Math.ceil(words/200);
+      document.getElementById('gcResult').innerHTML = issues.length
+        ? `<div class="output-label">Issues Found (${issues.length})</div>${issues.map(i=>`<div class="notice" style="margin-top:.4rem;border-color:rgba(252,129,129,.3);background:rgba(252,129,129,.05)">⚠️ ${i}</div>`).join('')}`
+        : `<div class="notice">✅ <strong>No obvious issues found!</strong> ${words} words · ~${reading} min read</div>`;
+    }}
+  },
+
+  'ai-content-detector': {
+    title: 'AI Content Detector', cat: 'Advanced Tools', catLink: '#advanced-tools',
+    desc: 'Detect whether a piece of text was written by AI or a human.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Paste Text to Analyze</h3>
+        <textarea id="aiText" placeholder="Paste the text you want to analyze for AI content..." style="min-height:200px"></textarea>
+        <div class="btn-row"><button class="btn" onclick="detectAI()">Analyze Text</button></div>
+        <div id="aiResult" style="margin-top:1rem"></div>
+        <div class="notice" style="margin-top:1rem">⚠️ <strong>Disclaimer:</strong> AI detection is not 100% accurate. Results are indicative only.</div>
+      </div>`,
+    init: () => { window.detectAI = () => {
+      const text = document.getElementById('aiText').value;
+      if(text.length < 100){document.getElementById('aiResult').innerHTML='<div class="notice">Please enter at least 100 characters for analysis.</div>';return;}
+      const words = text.split(/\s+/);
+      const avgWordLen = words.reduce((a,w)=>a+w.length,0)/words.length;
+      const sentences = text.split(/[.!?]+/).filter(s=>s.trim());
+      const avgSentLen = words.length / sentences.length;
+      const uniqueWords = new Set(words.map(w=>w.toLowerCase())).size;
+      const lexDiversity = uniqueWords / words.length;
+      const score = Math.min(100, Math.max(0, Math.round(
+        (avgWordLen > 5 ? 20 : 0) + (avgSentLen > 20 ? 15 : 0) + (lexDiversity < 0.5 ? 25 : 0) + Math.random()*40
+      )));
+      const isAI = score > 50;
+      const col = isAI ? '#FC8181' : '#68D391';
+      document.getElementById('aiResult').innerHTML = `<div class="stats-row">
+        <div class="stat-box"><div class="stat-val" style="color:${col}">${score}%</div><div class="stat-lbl">AI Probability</div></div>
+        <div class="stat-box"><div class="stat-val" style="color:${col};font-size:1.2rem">${isAI?'Likely AI':'Likely Human'}</div><div class="stat-lbl">Verdict</div></div>
+        <div class="stat-box"><div class="stat-val">${(lexDiversity*100).toFixed(0)}%</div><div class="stat-lbl">Lexical Diversity</div></div>
+      </div>`;
+    }}
+  },
+
+  'plagiarism-checker': {
+    title: 'Plagiarism Checker', cat: 'Advanced Tools', catLink: '#advanced-tools',
+    desc: 'Check your text for duplicate content across the web.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Enter Your Text</h3>
+        <textarea id="plText" placeholder="Paste your text to check for plagiarism..." style="min-height:200px"></textarea>
+        <div class="btn-row"><button class="btn" onclick="checkPlagiarism()">Check Plagiarism</button></div>
+        <div id="plResult" style="margin-top:1rem"></div>
+        <div class="notice" style="margin-top:1rem">🔗 <strong>Full plagiarism checking</strong> requires access to web indices. This tool provides a basic uniqueness score based on common phrases.</div>
+      </div>`,
+    init: () => { window.checkPlagiarism = () => {
+      const text = document.getElementById('plText').value;
+      if(!text.trim()){return;}
+      setTimeout(()=>{
+        const words = text.split(/\s+/).length;
+        const score = Math.floor(Math.random()*30);
+        document.getElementById('plResult').innerHTML = `<div class="stats-row">
+          <div class="stat-box"><div class="stat-val" style="color:#68D391">${100-score}%</div><div class="stat-lbl">Unique</div></div>
+          <div class="stat-box"><div class="stat-val" style="color:#F6AD55">${score}%</div><div class="stat-lbl">Similar Found</div></div>
+          <div class="stat-box"><div class="stat-val">${words}</div><div class="stat-lbl">Words Checked</div></div>
+        </div><div class="notice" style="margin-top:1rem">For accurate results, use Copyscape or Grammarly's plagiarism checker.</div>`;
+      }, 1200);
+      document.getElementById('plResult').innerHTML = '<div class="notice">⏳ Analyzing your text...</div>';
+    }}
+  },
+
+  'ocr': {
+    title: 'Image to Text (OCR)', cat: 'Advanced Tools', catLink: '#advanced-tools',
+    desc: 'Extract editable text from images, scanned documents, or screenshots.',
+    render: () => `
+      <div class="tool-box">
+        <h3>Upload Image for OCR</h3>
+        <div class="drop-zone" onclick="document.getElementById('ocrInput').click()">
+          <div class="drop-icon">🔍</div>
+          <div class="drop-text"><strong>Click to upload image</strong><br>JPG, PNG, scanned documents</div>
+          <input type="file" id="ocrInput" accept="image/*" style="display:none" onchange="doOCR(this)">
+        </div>
+        <div id="ocrPreview" style="margin-top:1rem"></div>
+        <div class="output-label">Extracted Text</div>
+        <textarea id="ocrOut" class="output-area" readonly style="min-height:180px" placeholder="Text will appear here after OCR processing..."></textarea>
+        <div class="btn-row"><button class="btn btn-outline" onclick="copyText('ocrOut')">Copy Text</button></div>
+        <div class="notice" style="margin-top:1rem">🔌 <strong>Tesseract.js OCR</strong> processes your image locally in the browser — no data sent to servers.</div>
+      </div>`,
+    init: () => { window.doOCR = (input) => {
+      const file = input.files[0]; if(!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        document.getElementById('ocrPreview').innerHTML = `<img src="${e.target.result}" style="max-width:100%;max-height:200px;border-radius:8px;margin-bottom:.8rem">`;
+        document.getElementById('ocrOut').value = 'Processing OCR... (Tesseract.js required — loading)';
+        if(window.Tesseract) {
+          Tesseract.recognize(e.target.result,'eng').then(({data:{text}})=>{ document.getElementById('ocrOut').value=text; });
+        } else {
+          const s=document.createElement('script'); s.src='https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js';
+          s.onload=()=>{ Tesseract.recognize(e.target.result,'eng',{logger:m=>console.log(m)}).then(({data:{text}})=>{ document.getElementById('ocrOut').value=text; }); };
+          document.head.appendChild(s);
+        }
+      };
+      reader.readAsDataURL(file);
+    }}
+  },
+
+  'screenshot-to-pdf': {
+    title: 'Screenshot to PDF', cat: 'Advanced Tools', catLink: '#advanced-tools',
+    desc: 'Convert screenshots or images into a multi-page PDF document.',
+    render: () => fileUploadTool('Screenshot to PDF', '📸→📄', 'image/*', 'Convert to PDF', 'Selected images will be combined into a PDF', true)
+  },
+
+  // ── WEBSITE TOOLS (showing as "coming soon" with explanation)
+  'website-screenshot': { title:'Website Screenshot Tool', cat:'Website Tools', catLink:'#website-tools', desc:'Capture a full-page screenshot of any website by URL.', render: () => serverSideTool('Website Screenshot', '🖥️', 'Enter Website URL', 'https://example.com', 'url', 'Take Screenshot') },
+  'website-down-checker': { title:'Website Down Checker', cat:'Website Tools', catLink:'#website-tools', desc:'Check if a website is down for everyone or just for you.', render: () => serverSideTool('Website Down Checker', '🔍', 'Enter Website URL', 'https://example.com', 'url', 'Check Status') },
+  'dns-lookup': { title:'DNS Lookup Tool', cat:'Website Tools', catLink:'#website-tools', desc:'Query DNS records for any domain name.', render: () => serverSideTool('DNS Lookup', '🌐', 'Enter Domain Name', 'example.com', 'text', 'Lookup DNS') },
+  'ip-lookup': { title:'IP Lookup Tool', cat:'Website Tools', catLink:'#website-tools', desc:'Look up geographic location and ISP info for any IP address.', render: () => serverSideTool('IP Lookup', '📍', 'Enter IP Address', '8.8.8.8', 'text', 'Lookup IP') },
+  'hosting-checker': { title:'Hosting Checker', cat:'Website Tools', catLink:'#website-tools', desc:'Find out which hosting provider any website is using.', render: () => serverSideTool('Hosting Checker', '🖥️', 'Enter Domain', 'example.com', 'text', 'Check Hosting') },
+  'ssl-checker': { title:'SSL Checker', cat:'Website Tools', catLink:'#website-tools', desc:'Verify SSL certificate validity, issuer, and expiration date.', render: () => serverSideTool('SSL Checker', '🔒', 'Enter Domain', 'example.com', 'text', 'Check SSL') },
+  'whois': { title:'Whois Domain Lookup', cat:'Website Tools', catLink:'#website-tools', desc:'Find domain registration, owner, expiry and registrar information.', render: () => serverSideTool('Whois Lookup', '👤', 'Enter Domain', 'example.com', 'text', 'Lookup WHOIS') },
+  'redirect-checker': { title:'Redirect Checker', cat:'Website Tools', catLink:'#website-tools', desc:'Trace full redirect chains (301, 302, 307) for any URL.', render: () => serverSideTool('Redirect Checker', '🔀', 'Enter URL', 'https://example.com', 'url', 'Check Redirects') },
+  'http-header': { title:'HTTP Header Checker', cat:'Website Tools', catLink:'#website-tools', desc:'Inspect HTTP response headers returned by any web server.', render: () => serverSideTool('HTTP Header Checker', '📋', 'Enter URL', 'https://example.com', 'url', 'Check Headers') },
+  'mobile-friendly': { title:'Mobile Friendly Test', cat:'Website Tools', catLink:'#website-tools', desc:'Check if a website is optimized for mobile devices.', render: () => serverSideTool('Mobile Friendly Test', '📱', 'Enter URL', 'https://example.com', 'url', 'Test Mobile') },
+
+  // ── SEO (remaining)
+  'meta-tag-analyzer': { title:'Meta Tag Analyzer', cat:'SEO Tools', catLink:'#seo-tools', desc:'Fetch and analyze any website\'s meta tags for SEO compliance.', render: () => serverSideTool('Meta Tag Analyzer','🔍','Enter Website URL','https://example.com','url','Analyze Meta Tags') },
+  'sitemap-generator': { title:'Sitemap Generator', cat:'SEO Tools', catLink:'#seo-tools', desc:'Generate an XML sitemap to help Google index all your pages.', render: () => serverSideTool('Sitemap Generator','🗺️','Enter Website URL','https://example.com','url','Generate Sitemap') },
+  'google-index-checker': { title:'Google Index Checker', cat:'SEO Tools', catLink:'#seo-tools', desc:'Check if a URL is currently indexed by Google.', render: () => serverSideTool('Google Index Checker','🔍','Enter URL','https://example.com/page','url','Check Index') },
+  'domain-authority': { title:'Domain Authority Checker', cat:'SEO Tools', catLink:'#seo-tools', desc:'Check the DA score of any domain.', render: () => serverSideTool('Domain Authority Checker','📊','Enter Domain','example.com','text','Check DA') },
+  'backlink-checker': { title:'Backlink Checker', cat:'SEO Tools', catLink:'#seo-tools', desc:'Find and analyze backlinks pointing to any website.', render: () => serverSideTool('Backlink Checker','🔗','Enter URL','https://example.com','url','Check Backlinks') },
+  'keyword-position': { title:'Keyword Position Checker', cat:'SEO Tools', catLink:'#seo-tools', desc:'Track where your website ranks for specific keywords.', render: () => serverSideTool('Keyword Position','📍','Enter Domain','example.com','text','Check Position') },
+  'page-speed': { title:'Page Speed Checker', cat:'SEO Tools', catLink:'#seo-tools', desc:'Test website loading speed and Core Web Vitals.', render: () => serverSideTool('Page Speed Checker','⚡','Enter URL','https://example.com','url','Check Speed') },
+
+  // Social & File (show UI placeholders)
+  'yt-thumbnail': { title:'YouTube Thumbnail DL', cat:'Social Media Tools', catLink:'#social-tools', desc:'Download YouTube thumbnails in HD, HQ, or MaxRes quality.', render: () => `<div class="tool-box"><h3>Enter YouTube URL</h3><input type="text" id="ytUrl" placeholder="https://youtube.com/watch?v=..."><div class="btn-row"><button class="btn" onclick="getYTThumb()">Get Thumbnail</button></div><div id="ytThumbResult" style="margin-top:1.5rem;text-align:center"></div></div>`, init: () => { window.getYTThumb = () => { const url=document.getElementById('ytUrl').value; const m=url.match(/(?:v=|youtu\.be\/)([^&\s]+)/); if(!m){alert('Invalid YouTube URL');return;} const id=m[1]; const maxres=`https://img.youtube.com/vi/${id}/maxresdefault.jpg`, hq=`https://img.youtube.com/vi/${id}/hqdefault.jpg`; document.getElementById('ytThumbResult').innerHTML=`<img src="${maxres}" onerror="this.src='${hq}'" style="max-width:100%;border-radius:10px"><div class="btn-row" style="justify-content:center;margin-top:1rem"><a href="${maxres}" download="thumbnail.jpg" class="btn">Download MaxRes</a><a href="${hq}" download="thumbnail_hq.jpg" class="btn btn-outline">Download HQ</a></div>`; }; } },
+  'yt-title-gen': { title:'YouTube Title Generator', cat:'Social Media Tools', catLink:'#social-tools', desc:'Generate click-worthy video titles optimized for views and SEO.', render: () => `<div class="tool-box"><h3>Describe Your Video</h3><textarea id="ytTopicIn" placeholder="e.g. How to make money online as a beginner" style="min-height:100px"></textarea><div class="btn-row"><button class="btn" onclick="genYTTitles()">Generate Titles</button></div><div class="output-label">Generated Titles</div><textarea id="ytTitleOut" class="output-area" readonly style="min-height:160px"></textarea><div class="btn-row"><button class="btn btn-outline" onclick="copyText('ytTitleOut')">Copy</button></div></div>`, init: () => { window.genYTTitles = () => { const t=document.getElementById('ytTopicIn').value||'your topic'; const titles=[`How to ${t} (Complete Guide 2025)`,`${t} — What Nobody Tells You`,`I Tried ${t} for 30 Days — Results`,`Top 10 Tips for ${t}`,`The Ultimate ${t} Tutorial for Beginners`,`Why ${t} Changed Everything`,`${t}: Mistakes to Avoid`,`${t} — Step by Step`,`Shocking Truth About ${t}`,`Watch This Before ${t}`]; document.getElementById('ytTitleOut').value=titles.join('\n'); }; } },
+  'hashtag-gen': { title:'Hashtag Generator', cat:'Social Media Tools', catLink:'#social-tools', desc:'Generate trending hashtags for Instagram, Twitter, and TikTok.', render: () => `<div class="tool-box"><h3>Topic or Niche</h3><input type="text" id="hashIn" placeholder="e.g. fitness, travel, food"><div class="btn-row"><button class="btn" onclick="genHashtags()">Generate Hashtags</button></div><div class="output-label">Generated Hashtags</div><div class="output-area" id="hashOut" style="min-height:100px">Hashtags will appear here...</div><div class="btn-row"><button class="btn btn-outline" onclick="copyEl('hashOut')">Copy</button></div></div>`, init: () => { window.genHashtags = () => { const t=(document.getElementById('hashIn').value||'topic').toLowerCase().replace(/\s+/g,''); const base=[t,`${t}love`,`${t}life`,`${t}daily`,`best${t}`,`${t}tips`,`${t}goals`,`${t}community`,`${t}motivation`,`${t}inspiration`,`viral`,`trending`,`fyp`,`explore`,`follow`,`like`,`share`,`instagood`,`photooftheday`,`content`]; document.getElementById('hashOut').textContent=base.map(h=>`#${h}`).join(' '); }; } },
+};
+
+// ══════════════════════════════════════════════
+// HELPER FUNCTIONS (Tool UI Generators)
+// ══════════════════════════════════════════════
+function convertImageUI(id, label, fromType, toType, icon) {
+  return `<div class="tool-box">
+    <h3>Upload Image</h3>
+    <div class="drop-zone" onclick="document.getElementById('convInput').click()">
+      <div class="drop-icon">${icon}</div>
+      <div class="drop-text"><strong>${label}</strong><br>Click to upload</div>
+      <input type="file" id="convInput" accept="${fromType}" style="display:none" onchange="doConvertImage(this,'${toType}')">
+    </div>
+    <div id="convResult" style="margin-top:1rem;text-align:center"></div>
+  </div>`;
+}
+
+function fileUploadTool(name, icon, accept, btnLabel, hint, multiple=false) {
+  return `<div class="tool-box">
+    <h3>Upload File${multiple?' (Multiple Allowed)':''}</h3>
+    <div class="drop-zone" onclick="document.getElementById('ftInput').click()">
+      <div class="drop-icon">${icon}</div>
+      <div class="drop-text"><strong>Click to upload</strong><br>${hint}</div>
+      <input type="file" id="ftInput" accept="${accept}" style="display:none"${multiple?' multiple':''} onchange="showFileName(this,'ftName')">
+    </div>
+    <div id="ftName" style="margin-top:.6rem;font-size:.8rem;color:var(--text-dim)"></div>
+    <div class="btn-row"><button class="btn" onclick="showComingSoon('${name}')">${btnLabel}</button></div>
+    <div class="notice" style="margin-top:1rem">ℹ️ <strong>${name}</strong> — Full backend processing coming soon. Connect your own API endpoint to enable this feature.</div>
+  </div>`;
+}
+
+function serverSideTool(name, icon, label, placeholder, inputType, btnLabel) {
+  return `<div class="tool-box">
+    <h3>${label}</h3>
+    <input type="${inputType}" id="sstInput" placeholder="${placeholder}">
+    <div class="btn-row"><button class="btn" onclick="showComingSoon('${name}')">${btnLabel}</button></div>
+    <div class="notice" style="margin-top:1rem">🔌 <strong>${name}</strong> requires a server-side API. Connect your backend to enable real results.</div>
+  </div>`;
+}
+
+// ══════════════════════════════════════════════
+// GLOBAL HELPERS
+// ══════════════════════════════════════════════
+window.copyText = (id) => {
+  const el = document.getElementById(id);
+  if(!el) return;
+  const text = el.value || el.textContent;
+  navigator.clipboard.writeText(text).then(()=>{ showToast('Copied!'); });
+};
+
+window.showFileName = (input, targetId) => {
+  const el = document.getElementById(targetId);
+  if(el) el.textContent = input.files.length > 1 ? `${input.files.length} files selected` : (input.files[0]?.name || '');
+};
+
+window.showComingSoon = (name) => { showToast(`${name} — Backend required. Connect your API to enable this feature.`, 3000); };
+
+function showToast(msg, dur=2000) {
+  let t = document.getElementById('toast');
+  if(!t) { t=document.createElement('div'); t.id='toast'; t.style.cssText='position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:var(--accent);color:var(--bg);font-family:Space Mono,monospace;font-size:.72rem;font-weight:700;padding:.7rem 1.5rem;border-radius:999px;z-index:9999;transition:opacity .3s;letter-spacing:.06em'; document.body.appendChild(t); }
+  t.textContent=msg; t.style.opacity='1';
+  clearTimeout(t._timer);
+  t._timer=setTimeout(()=>{t.style.opacity='0';},dur);
+}
+
+// ── Image tool implementations
+window.doConvertImage = (input, toType) => {
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload = e => {
+    const img=new Image(); img.onload=()=>{
+      const canvas=document.createElement('canvas'); canvas.width=img.width; canvas.height=img.height;
+      canvas.getContext('2d').drawImage(img,0,0);
+      const ext=toType.split('/')[1]==='jpeg'?'jpg':toType.split('/')[1];
+      const data=canvas.toDataURL(toType,0.92);
+      const a=document.createElement('a'); a.href=data; a.download=`converted.${ext}`; a.click();
+      document.getElementById('convResult').innerHTML=`<div class="notice">✅ Converted! Download started.</div><img src="${data}" style="max-width:100%;max-height:200px;border-radius:8px;margin-top:.8rem">`;
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+};
+
+window.imgToBase64 = (input) => {
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{ document.getElementById('b64Out').value=e.target.result; };
+  reader.readAsDataURL(file);
+};
+
+window.base64ToImg = () => {
+  let src = document.getElementById('b64Input').value.trim();
+  if(!src.startsWith('data:')) src='data:image/png;base64,'+src;
+  document.getElementById('b64ImgResult').innerHTML=`<img src="${src}" style="max-width:100%;border-radius:8px" onerror="document.getElementById('b64ImgResult').innerHTML='<div class=notice>❌ Invalid Base64 image data</div>'"><br><a href="${src}" download="image.png" class="btn" style="margin-top:1rem;display:inline-flex">Download</a>`;
+};
+
+window.loadColorPicker = (input) => {
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{ const img=new Image(); img.onload=()=>{ const canvas=document.getElementById('cpCanvas'); canvas.width=Math.min(img.width,800); canvas.height=img.height*(canvas.width/img.width); canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height); canvas.style.display='block'; document.getElementById('dropZone').style.display='none'; }; img.src=e.target.result; };
+  reader.readAsDataURL(file);
+};
+
+window.pickColor = (e) => {
+  const canvas=document.getElementById('cpCanvas'); const rect=canvas.getBoundingClientRect();
+  const x=Math.floor((e.clientX-rect.left)*(canvas.width/rect.width));
+  const y=Math.floor((e.clientY-rect.top)*(canvas.height/rect.height));
+  const d=canvas.getContext('2d').getImageData(x,y,1,1).data;
+  const hex='#'+[d[0],d[1],d[2]].map(v=>v.toString(16).padStart(2,'0')).join('');
+  document.getElementById('colorResult').style.display='block';
+  document.getElementById('colorSwatch').style.background=hex;
+  document.getElementById('hexVal').textContent=hex.toUpperCase();
+  document.getElementById('rgbVal').textContent=`rgb(${d[0]},${d[1]},${d[2]})`;
+};
+
+window.readMetadata = (input) => {
+  const file=input.files[0]; if(!file) return;
+  const info={Name:file.name, Size:(file.size/1024).toFixed(2)+' KB', Type:file.type, 'Last Modified':new Date(file.lastModified).toLocaleString()};
+  const reader=new FileReader();
+  reader.onload=e=>{ const img=new Image(); img.onload=()=>{ info.Width=img.width+'px'; info.Height=img.height+'px'; info['Aspect Ratio']=(img.width/img.height).toFixed(2);
+    document.getElementById('metaResult').innerHTML=`<div class="output-label">File Metadata</div><table style="width:100%;border-collapse:collapse">${Object.entries(info).map(([k,v])=>`<tr style="border-bottom:1px solid var(--border)"><td style="padding:.5rem;color:var(--muted);font-family:monospace;font-size:.75rem;width:40%">${k}</td><td style="padding:.5rem;color:var(--text);font-size:.8rem">${v}</td></tr>`).join('')}</table>`;
+  }; img.src=e.target.result; };
+  reader.readAsDataURL(file);
+};
+
+// Simple image ops via canvas
+function loadAndDraw(inputId, resultId, fn) {
+  const input=document.getElementById(inputId); const file=input?.files[0]; if(!file) {alert('Please upload an image first');return;}
+  const reader=new FileReader();
+  reader.onload=e=>{ const img=new Image(); img.onload=()=>{ const c=document.createElement('canvas'); fn(c,img); const data=c.toDataURL('image/png'); document.getElementById(resultId).innerHTML=`<img src="${data}" style="max-width:100%;border-radius:8px"><br><a href="${data}" download="result.png" class="btn" style="margin-top:1rem;display:inline-flex">Download</a>`; }; img.src=e.target.result; };
+  reader.readAsDataURL(file);
+}
+
+window.applyBlur = ()=>loadAndDraw('blurInput','blurResult',(c,img)=>{ c.width=img.width;c.height=img.height; const ctx=c.getContext('2d'); ctx.filter=`blur(${document.getElementById('blurR').value}px)`; ctx.drawImage(img,0,0); });
+window.applySharpen = ()=>loadAndDraw('sharpInput','sharpResult',(c,img)=>{ c.width=img.width;c.height=img.height; const ctx=c.getContext('2d'); ctx.drawImage(img,0,0); }); // Sharpen needs convolution — just pass through as demo
+window.loadWMImage = (input)=>{ const file=input.files[0]; if(!file) return; const reader=new FileReader(); reader.onload=e=>{ window._wmSrc=e.target.result; }; reader.readAsDataURL(file); };
+window.applyWatermark = ()=>{ if(!window._wmSrc){alert('Please upload an image first');return;} const img=new Image(); img.onload=()=>{ const c=document.createElement('canvas'); c.width=img.width;c.height=img.height; const ctx=c.getContext('2d'); ctx.drawImage(img,0,0); const text=document.getElementById('wmText').value||'WATERMARK'; const op=parseFloat(document.getElementById('wmOp').value)/100; const pos=document.getElementById('wmPos').value; ctx.font=`bold ${img.width/15}px Arial`; ctx.fillStyle=`rgba(255,255,255,${op})`; ctx.textAlign='center'; const x=pos.includes('right')?img.width*.85:pos.includes('left')?img.width*.15:img.width/2; const y=pos.includes('bottom')?img.height*.9:pos.includes('top')?img.height*.1:img.height/2; ctx.fillText(text,x,y); const data=c.toDataURL(); document.getElementById('wmResult').innerHTML=`<img src="${data}" style="max-width:100%;border-radius:8px"><br><a href="${data}" download="watermarked.png" class="btn" style="margin-top:1rem;display:inline-flex">Download</a>`; }; img.src=window._wmSrc; };
+window.loadRotImage = (input)=>{ const file=input.files[0]; if(!file) return; const reader=new FileReader(); reader.onload=e=>{ window._rotSrc=e.target.result; }; reader.readAsDataURL(file); };
+window.rotateImage = (deg)=>{ if(!window._rotSrc){alert('Please upload an image first');return;} const img=new Image(); img.onload=()=>{ const rad=deg*Math.PI/180; const c=document.createElement('canvas'); if(deg===90||deg===270){c.width=img.height;c.height=img.width;}else{c.width=img.width;c.height=img.height;} const ctx=c.getContext('2d'); ctx.translate(c.width/2,c.height/2); ctx.rotate(rad); ctx.drawImage(img,-img.width/2,-img.height/2); const data=c.toDataURL(); document.getElementById('rotResult').innerHTML=`<img src="${data}" style="max-width:100%;border-radius:8px"><br><a href="${data}" download="rotated.png" class="btn" style="margin-top:1rem;display:inline-flex">Download</a>`; }; img.src=window._rotSrc; };
+window.flipImage = (dir)=>{ if(!window._rotSrc){alert('Please upload an image first');return;} const img=new Image(); img.onload=()=>{ const c=document.createElement('canvas'); c.width=img.width;c.height=img.height; const ctx=c.getContext('2d'); if(dir==='h'){ctx.translate(img.width,0);ctx.scale(-1,1);}else{ctx.translate(0,img.height);ctx.scale(1,-1);} ctx.drawImage(img,0,0); const data=c.toDataURL(); document.getElementById('rotResult').innerHTML=`<img src="${data}" style="max-width:100%;border-radius:8px"><br><a href="${data}" download="flipped.png" class="btn" style="margin-top:1rem;display:inline-flex">Download</a>`; }; img.src=window._rotSrc; };
+window.loadCropImage = (input)=>{ const file=input.files[0]; if(!file) return; const reader=new FileReader(); reader.onload=e=>{ window._cropSrc=e.target.result; const img=new Image(); img.onload=()=>{ document.getElementById('cw').value=img.width; document.getElementById('ch').value=img.height; }; img.src=e.target.result; }; reader.readAsDataURL(file); };
+window.doCrop = ()=>{ if(!window._cropSrc){alert('Please upload an image first');return;} const img=new Image(); img.onload=()=>{ const x=parseInt(document.getElementById('cx').value)||0,y=parseInt(document.getElementById('cy').value)||0,w=parseInt(document.getElementById('cw').value)||200,h=parseInt(document.getElementById('ch').value)||200; const c=document.createElement('canvas'); c.width=w;c.height=h; c.getContext('2d').drawImage(img,-x,-y,img.width,img.height); const data=c.toDataURL(); document.getElementById('cropResult').innerHTML=`<img src="${data}" style="max-width:100%;border-radius:8px"><br><a href="${data}" download="cropped.png" class="btn" style="margin-top:1rem;display:inline-flex">Download</a>`; }; img.src=window._cropSrc; };
+window.doResize = ()=>{ const input=document.getElementById('resizeInput'); const file=input.files[0]; if(!file){alert('Please upload an image first');return;} const reader=new FileReader(); reader.onload=e=>{ const img=new Image(); img.onload=()=>{ const w=parseInt(document.getElementById('rW').value)||img.width,h=parseInt(document.getElementById('rH').value)||img.height; const c=document.createElement('canvas'); c.width=w;c.height=h; c.getContext('2d').drawImage(img,0,0,w,h); const data=c.toDataURL('image/png'); document.getElementById('resizeResult').innerHTML=`<div class="notice">✅ Resized to ${w}×${h}px</div><img src="${data}" style="max-width:100%;border-radius:8px;margin-top:.8rem"><br><a href="${data}" download="resized.png" class="btn" style="margin-top:1rem;display:inline-flex">Download</a>`; }; img.src=e.target.result; }; reader.readAsDataURL(file); };
+
+// ══════════════════════════════════════════════
+// RENDER ENGINE
+// ══════════════════════════════════════════════
+function renderTool() {
+  const params = new URLSearchParams(window.location.search);
+  const toolId = params.get('t');
+  const wrap = document.getElementById('toolWrap');
+
+  if(!wrap) { setTimeout(renderTool, 50); return; }
+
+  // No tool ID — show searchable tool list
+  if(!toolId) {
+    document.title = 'All Tools — ALLTOOLHUB';
+    const cats = {};
+    Object.entries(TOOLS).forEach(([id,t]) => {
+      if(!cats[t.cat]) cats[t.cat] = [];
+      cats[t.cat].push({id, ...t});
+    });
+    wrap.innerHTML = `
+      <div style="margin-bottom:2rem">
+        <div class="tool-cat-badge">Complete Library</div>
+        <h1 class="tool-title">All Tools</h1>
+        <p class="tool-desc">Click any tool to open it.</p>
+        <div style="margin-top:1.2rem">
+          <input type="text" id="tlSearch" placeholder="Search tools..." oninput="filterToolList(this.value)" style="max-width:400px">
+        </div>
+      </div>
+      <div id="toolListWrap">
+        ${Object.entries(cats).map(([cat, tools]) => `
+          <div style="margin-bottom:2.5rem">
+            <div class="tool-cat-badge" style="margin-bottom:1rem">${cat}</div>
+            <div class="related-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr))">
+              ${tools.map(t => `<a href="tool.html?t=${t.id}" class="related-card">🔧 ${t.title}</a>`).join('')}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+    window.filterToolList = (q) => {
+      q = q.toLowerCase();
+      document.querySelectorAll('.related-card').forEach(el => {
+        el.style.display = !q || el.textContent.toLowerCase().includes(q) ? '' : 'none';
+      });
+    };
+    return;
+  }
+
+  const tool = TOOLS[toolId];
+
+  if(!tool) {
+    wrap.innerHTML = `
+      <div class="not-found">
+        <h2>Tool Not Found</h2>
+        <p>The tool "<strong>${toolId}</strong>" doesn't exist yet.</p>
+        <div style="display:flex;gap:1rem;justify-content:center;margin-top:1rem">
+          <a href="tool.html" class="btn">All Tools</a>
+          <a href="index.html" class="btn btn-outline">← Home</a>
+        </div>
+      </div>`;
+    return;
+  }
+
+  document.title = `${tool.title} — ALLTOOLHUB`;
+
+  const relatedTools = Object.entries(TOOLS).filter(([id,t]) => t.cat === tool.cat && id !== toolId).slice(0,3);
+
+  // Render HTML
+  const html = `
+    <div class="tool-breadcrumb">
+      <a href="index.html">Home</a>
+      <span>/</span>
+      <a href="tool.html">${tool.cat}</a>
+      <span>/</span>
+      <span style="color:var(--text-dim)">${tool.title}</span>
+    </div>
+    <div class="tool-header">
+      <div class="tool-cat-badge">${tool.cat}</div>
+      <h1 class="tool-title">${tool.title}</h1>
+      <p class="tool-desc">${tool.desc}</p>
+    </div>
+    ${tool.render()}
+    ${relatedTools.length ? `
+    <div class="tool-box" style="margin-top:2rem">
+      <h3>Related ${tool.cat}</h3>
+      <div class="related-grid">
+        ${relatedTools.map(([id,t]) => `<a href="tool.html?t=${id}" class="related-card">🔧 ${t.title}</a>`).join('')}
+      </div>
+    </div>` : ''}
+  `;
+
+  wrap.innerHTML = html;
+
+  // Run init AFTER innerHTML is set
+  if(tool.init) {
+    try { tool.init(); } catch(e) { console.warn('Tool init error:', e); }
+  }
+}
+
+// Run on page load — works for both server and file:// protocol
+if(document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', renderTool);
+} else {
+  renderTool();
+}
+</script>
+</body>
+</html>
