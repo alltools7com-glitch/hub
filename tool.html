@@ -164,7 +164,7 @@ const TOOLS = {
           <input type="range" min="10" max="100" value="75" id="qualSlider" oninput="document.getElementById('qualVal').textContent=this.value">
         </div>
         <div class="btn-row">
-          <button class="btn" onclick="compressImage()">Compress Image</button>
+          <button class="btn" onclick="compressImage()"><i class="fas fa-compress-alt"></i> Compress Image</button>
         </div>
         <div class="output-label">Result</div>
         <div class="output-area" id="compressOut">Upload an image to see compression results here.</div>
@@ -196,7 +196,7 @@ const TOOLS = {
         </div>
         <div style="margin-top:.8rem"><label><input type="checkbox" id="keepRatio" checked style="width:auto;margin-right:.4rem"> Maintain Aspect Ratio</label></div>
         <div class="btn-row">
-          <button class="btn" onclick="doResize()">Resize Image</button>
+          <button class="btn" onclick="doResize()"><i class="fas fa-expand-arrows-alt"></i> Resize Image</button>
         </div>
         <div id="resizeResult"></div>
       </div>`
@@ -244,7 +244,7 @@ const TOOLS = {
           <div><label>Height (px)</label><input type="number" id="ch" value="300"></div>
         </div>
         <div class="btn-row">
-          <button class="btn" onclick="doCrop()">Crop Image</button>
+          <button class="btn" onclick="doCrop()"><i class="fas fa-crop-alt"></i> Crop Image</button>
         </div>
         <div id="cropResult"></div>
       </div>`
@@ -286,7 +286,7 @@ const TOOLS = {
         <div class="output-label">Base64 Output</div>
         <textarea class="output-area" id="b64Out" style="min-height:120px" readonly placeholder="Base64 string will appear here..."></textarea>
         <div class="btn-row">
-          <button class="btn" onclick="copyText('b64Out')">Copy Base64</button>
+          <button class="btn" onclick="copyText('b64Out')"><i class="fas fa-copy"></i> Copy Base64</button>
         </div>
       </div>`,
     init: () => {}
@@ -300,7 +300,7 @@ const TOOLS = {
         <h3>Paste Base64 String</h3>
         <textarea id="b64Input" placeholder="Paste base64 string here (with or without data:image/... prefix)..." style="min-height:140px"></textarea>
         <div class="btn-row">
-          <button class="btn" onclick="base64ToImg()">Convert to Image</button>
+          <button class="btn" onclick="base64ToImg()"><i class="fas fa-image"></i> Convert to Image</button>
         </div>
         <div id="b64ImgResult" style="margin-top:1rem"></div>
       </div>`
@@ -335,7 +335,7 @@ const TOOLS = {
             <input type="range" min="10" max="100" value="60" oninput="document.getElementById('wmOpVal').textContent=this.value" id="wmOp">
           </div>
         </div>
-        <div class="btn-row"><button class="btn" onclick="applyWatermark()">Apply Watermark</button></div>
+        <div class="btn-row"><button class="btn" onclick="applyWatermark()"><i class="fas fa-stamp"></i> Apply Watermark</button></div>
         <div id="wmResult" style="margin-top:1rem"></div>
       </div>`
   },
@@ -390,7 +390,7 @@ const TOOLS = {
         </div>
         <div style="margin-top:1rem"><label>Blur Amount: <span id="blurVal">5</span>px</label>
           <input type="range" min="1" max="30" value="5" oninput="document.getElementById('blurVal').textContent=this.value" id="blurR"></div>
-        <div class="btn-row"><button class="btn" onclick="applyBlur()">Apply Blur</button></div>
+        <div class="btn-row"><button class="btn" onclick="applyBlur()"><i class="fas fa-magic"></i> Apply Blur</button></div>
         <div id="blurResult" style="margin-top:1rem"></div>
       </div>`
   },
@@ -408,154 +408,183 @@ const TOOLS = {
         </div>
         <div style="margin-top:1rem"><label>Sharpness: <span id="sharpVal">50</span>%</label>
           <input type="range" min="10" max="100" value="50" oninput="document.getElementById('sharpVal').textContent=this.value" id="sharpR"></div>
-        <div class="btn-row"><button class="btn" onclick="applySharpen()">Sharpen Image</button></div>
+        <div class="btn-row"><button class="btn" onclick="applySharpen()"><i class="fas fa-star"></i> Sharpen Image</button></div>
         <div id="sharpResult" style="margin-top:1rem"></div>
       </div>`
   },
 
-  // ── PDF TOOLS
+  // ── PDF TOOLS (powered by pdf-lib + pdfjs — 100% browser, no server needed)
+  // Helper: load pdf-lib lazily
   'pdf-to-word': {
     title: 'PDF to Word', cat: 'PDF Tools', catLink: '#pdf-tools',
-    desc: 'Convert PDF to fully editable .docx file preserving fonts and layout.',
-    render: () => fileUploadTool('PDF to Word', '📄', '.pdf', 'Convert to Word (.docx)', 'PDF file will be converted and downloaded as .docx')
+    desc: 'Extract text from PDF and download as a real .docx Word file — browser only.',
+    render: () => `<div class="tool-box"><h3>Upload PDF</h3><div class="drop-zone" onclick="document.getElementById('p2wIn').click()"><div class="drop-icon">📄→📝</div><div class="drop-text"><strong>Click to upload PDF</strong><br>Downloads as real <strong>.docx</strong> Word file</div><input type="file" id="p2wIn" accept=".pdf" style="display:none" onchange="pdfToWord(this)"></div><div id="p2wResult" style="margin-top:1rem"></div><div class="notice" style="margin-top:.8rem">ℹ️ Layout/images are not preserved — only text content is extracted. For full formatting use <a href="https://smallpdf.com/pdf-to-word" target="_blank" style="color:var(--accent)">SmallPDF</a>.</div></div>`,
+    init: () => {
+      window.pdfToWord = (inp) => {
+        const f = inp.files[0]; if(!f) return;
+        const res = document.getElementById('p2wResult');
+        res.innerHTML = '<div class="notice">⏳ Loading libraries...</div>';
+        // Load PDF.js first, then docx library
+        loadPDFJS(() => {
+          loadDocxLib(() => {
+            const reader = new FileReader();
+            reader.onload = async e => {
+              try {
+                const pdf = await pdfjsLib.getDocument({data: e.target.result}).promise;
+                res.innerHTML = `<div class="notice">⏳ Extracting text from ${pdf.numPages} pages...</div>`;
+                const { Document, Paragraph, TextRun, HeadingLevel, Packer } = docx;
+                const children = [];
+                for(let i = 1; i <= pdf.numPages; i++) {
+                  const page = await pdf.getPage(i);
+                  const tc = await page.getTextContent();
+                  // Page heading
+                  children.push(new Paragraph({ text: `Page ${i}`, heading: HeadingLevel.HEADING_2 }));
+                  // Group items into lines by Y position
+                  const lines = {};
+                  tc.items.forEach(item => {
+                    const y = Math.round(item.transform[5]);
+                    if(!lines[y]) lines[y] = [];
+                    lines[y].push(item.str);
+                  });
+                  Object.keys(lines).sort((a,b)=>b-a).forEach(y => {
+                    const lineText = lines[y].join(' ').trim();
+                    if(lineText) children.push(new Paragraph({ children: [new TextRun(lineText)] }));
+                  });
+                  children.push(new Paragraph({ text: '' })); // spacer
+                }
+                const doc = new Document({ sections: [{ children }] });
+                const blob = await Packer.toBlob(doc);
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = f.name.replace(/\.pdf$/i, '.docx');
+                a.click();
+                res.innerHTML = `<div class="notice">✅ Done! ${pdf.numPages} pages converted to <strong>.docx</strong> — check your downloads!</div>`;
+              } catch(err) {
+                res.innerHTML = `<div class="notice">❌ Error: ${err.message}</div>`;
+              }
+            };
+            reader.readAsArrayBuffer(f);
+          });
+        });
+      };
+      // Lazy loader for docx library
+      window.loadDocxLib = (cb) => {
+        if(window.docx) { cb(); return; }
+        const s = document.createElement('script');
+        s.src = 'https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.min.js';
+        s.onload = cb;
+        s.onerror = () => alert('Failed to load docx library. Check your internet connection.');
+        document.head.appendChild(s);
+      };
+    }
   },
   'word-to-pdf': {
     title: 'Word to PDF', cat: 'PDF Tools', catLink: '#pdf-tools',
-    desc: 'Convert .doc or .docx files to PDF with formatting intact.',
-    render: () => fileUploadTool('Word to PDF', '📝', '.doc,.docx', 'Convert to PDF', 'Word file will be converted and downloaded as .pdf')
+    desc: 'Paste your text content and download it as a clean PDF.',
+    render: () => `<div class="tool-box"><h3>Paste Your Text / Content</h3><textarea id="w2pText" placeholder="Paste your document text here..." style="min-height:200px"></textarea><div class="row2" style="margin-top:1rem"><div><label>Font Size</label><select id="w2pSize"><option value="12">12pt</option><option value="14" selected>14pt</option><option value="16">16pt</option></select></div><div><label>Page Margin</label><select id="w2pMargin"><option value="40">Normal</option><option value="20">Narrow</option><option value="72">Wide</option></select></div></div><div class="btn-row"><button class="btn" onclick="wordToPDF()"><i class="fas fa-file-pdf"></i> Generate PDF</button></div><div id="w2pResult" style="margin-top:1rem"></div></div>`,
+    init: () => { window.wordToPDF = async () => { const text=document.getElementById('w2pText').value; if(!text.trim()){alert('Please enter some text first');return;} const res=document.getElementById('w2pResult'); res.innerHTML='<div class="notice">⏳ Generating PDF...</div>'; loadPDFLib(async()=>{ try{ const {PDFDocument,rgb,StandardFonts}=PDFLib; const pdf=await PDFDocument.create(); const font=await pdf.embedFont(StandardFonts.Helvetica); const sz=parseInt(document.getElementById('w2pSize').value); const margin=parseInt(document.getElementById('w2pMargin').value); const lines=text.split('\n'); let page=pdf.addPage(); let {width,height}=page.getSize(); let y=height-margin; lines.forEach(line=>{ if(y<margin){page=pdf.addPage();y=page.getSize().height-margin;} const words=line||' '; page.drawText(words.substring(0,90),{x:margin,y,size:sz,font,color:rgb(0,0,0)}); y-=sz+6; }); const bytes=await pdf.save(); const blob=new Blob([bytes],{type:'application/pdf'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='document.pdf'; a.click(); res.innerHTML='<div class="notice">✅ PDF created and downloaded!</div>'; }catch(e){res.innerHTML=`<div class="notice">❌ ${e.message}</div>`;} }); }; }
   },
   'pdf-to-jpg': {
     title: 'PDF to JPG', cat: 'PDF Tools', catLink: '#pdf-tools',
-    desc: 'Extract each PDF page as a high-quality JPG image.',
-    render: () => fileUploadTool('PDF to JPG', '📄→🖼️', '.pdf', 'Convert to JPG', 'Each page will be exported as a JPG image')
+    desc: 'Convert each PDF page into a high-quality JPG image in your browser.',
+    render: () => `<div class="tool-box"><h3>Upload PDF</h3><div class="drop-zone" onclick="document.getElementById('p2jIn').click()"><div class="drop-icon">📄→🖼️</div><div class="drop-text"><strong>Click to upload PDF</strong><br>Each page becomes a JPG image</div><input type="file" id="p2jIn" accept=".pdf" style="display:none" onchange="pdfToJPG(this)"></div><div><label style="margin-top:1rem;display:block">Scale / Quality</label><select id="p2jScale"><option value="1">Normal (72dpi)</option><option value="2" selected>High (144dpi)</option><option value="3">Ultra (216dpi)</option></select></div><div id="p2jResult" style="margin-top:1rem"></div></div>`,
+    init: () => { window.pdfToJPG = (inp) => { const f=inp.files[0]; if(!f) return; const res=document.getElementById('p2jResult'); res.innerHTML='<div class="notice">⏳ Loading PDF.js...</div>'; loadPDFJS(async()=>{ const scale=parseFloat(document.getElementById('p2jScale').value); const reader=new FileReader(); reader.onload=async e=>{ try{ const pdf=await pdfjsLib.getDocument({data:e.target.result}).promise; res.innerHTML=`<div class="notice">✅ ${pdf.numPages} pages found — rendering...</div><div id="p2jPages" style="display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.8rem"></div>`; const container=document.getElementById('p2jPages'); for(let i=1;i<=pdf.numPages;i++){ const page=await pdf.getPage(i); const vp=page.getViewport({scale}); const canvas=document.createElement('canvas'); canvas.width=vp.width; canvas.height=vp.height; await page.render({canvasContext:canvas.getContext('2d'),viewport:vp}).promise; const dataUrl=canvas.toDataURL('image/jpeg',0.92); const a=document.createElement('a'); a.href=dataUrl; a.download=`page_${i}.jpg`; a.innerHTML=`<img src="${dataUrl}" style="width:120px;height:auto;border-radius:6px;border:2px solid var(--border2)" title="Click to download page ${i}">`; container.appendChild(a); } }catch(e){res.innerHTML=`<div class="notice">❌ ${e.message}</div>`;} }; reader.readAsArrayBuffer(f); }); }; }
   },
   'jpg-to-pdf': {
     title: 'JPG to PDF', cat: 'PDF Tools', catLink: '#pdf-tools',
-    desc: 'Combine one or more JPG images into a single PDF document.',
-    render: () => fileUploadTool('JPG to PDF', '🖼️→📄', '.jpg,.jpeg,.png', 'Convert to PDF', 'Images will be merged into a single PDF')
+    desc: 'Combine one or more images into a single PDF document, right in your browser.',
+    render: () => `<div class="tool-box"><h3>Upload Images</h3><div class="drop-zone" onclick="document.getElementById('j2pIn').click()"><div class="drop-icon">🖼️→📄</div><div class="drop-text"><strong>Click to upload images</strong><br>JPG, PNG, WebP — multiple allowed</div><input type="file" id="j2pIn" accept="image/*" multiple style="display:none" onchange="loadJ2PImages(this)"></div><div id="j2pPreviews" style="display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.8rem"></div><div class="btn-row" id="j2pBtn" style="display:none"><button class="btn" onclick="jpgToPDF()"><i class="fas fa-plus-circle"></i> 📄 Create PDF</button></div><div id="j2pResult" style="margin-top:1rem"></div></div>`,
+    init: () => {
+      window._j2pFiles = [];
+      window.loadJ2PImages = (inp) => { window._j2pFiles=Array.from(inp.files); const prev=document.getElementById('j2pPreviews'); prev.innerHTML=''; window._j2pFiles.forEach((f,i)=>{ const url=URL.createObjectURL(f); prev.innerHTML+=`<img src="${url}" style="width:80px;height:60px;object-fit:cover;border-radius:6px;border:2px solid var(--border2)">`; }); document.getElementById('j2pBtn').style.display=window._j2pFiles.length?'flex':'none'; };
+      window.jpgToPDF = () => { const res=document.getElementById('j2pResult'); res.innerHTML='<div class="notice">⏳ Building PDF...</div>'; loadPDFLib(async()=>{ try{ const {PDFDocument}=PDFLib; const pdf=await PDFDocument.create(); for(const file of window._j2pFiles){ const ab=await file.arrayBuffer(); let img; if(file.type==='image/png'){img=await pdf.embedPng(ab);}else{img=await pdf.embedJpg(ab);} const page=pdf.addPage([img.width,img.height]); page.drawImage(img,{x:0,y:0,width:img.width,height:img.height}); } const bytes=await pdf.save(); const blob=new Blob([bytes],{type:'application/pdf'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='images.pdf'; a.click(); res.innerHTML=`<div class="notice">✅ PDF created with ${window._j2pFiles.length} page(s)!</div>`; }catch(e){res.innerHTML=`<div class="notice">❌ ${e.message}</div>`;} }); };
+    }
   },
   'pdf-compressor': {
     title: 'PDF Compressor', cat: 'PDF Tools', catLink: '#pdf-tools',
-    desc: 'Reduce PDF file size while maintaining acceptable quality.',
-    render: () => fileUploadTool('PDF Compressor', '🗜️', '.pdf', 'Compress PDF', 'PDF will be compressed and ready to download')
+    desc: 'Remove metadata and optimize a PDF to reduce file size in-browser.',
+    render: () => `<div class="tool-box"><h3>Upload PDF</h3><div class="drop-zone" onclick="document.getElementById('pcompIn').click()"><div class="drop-icon">🗜️</div><div class="drop-text"><strong>Click to upload PDF</strong><br>Metadata removed, structure optimized</div><input type="file" id="pcompIn" accept=".pdf" style="display:none" onchange="compressPDF(this)"></div><div id="pcompResult" style="margin-top:1rem"></div><div class="notice" style="margin-top:.8rem">ℹ️ Browser-based compression removes metadata. For image-heavy PDFs, use <a href="https://ilovepdf.com/compress_pdf" target="_blank" style="color:var(--accent)">ilovepdf.com</a> for deeper compression.</div></div>`,
+    init: () => { window.compressPDF = async (inp) => { const f=inp.files[0]; if(!f) return; const res=document.getElementById('pcompResult'); res.innerHTML='<div class="notice">⏳ Compressing...</div>'; loadPDFLib(async()=>{ try{ const ab=await f.arrayBuffer(); const {PDFDocument}=PDFLib; const pdf=await PDFDocument.load(ab,{ignoreEncryption:true}); pdf.setTitle(''); pdf.setAuthor(''); pdf.setSubject(''); pdf.setKeywords([]); pdf.setProducer(''); pdf.setCreator(''); const bytes=await pdf.save({useObjectStreams:true}); const blob=new Blob([bytes],{type:'application/pdf'}); const origKB=(f.size/1024).toFixed(1); const newKB=(bytes.length/1024).toFixed(1); const saved=Math.max(0,(((f.size-bytes.length)/f.size)*100).toFixed(0)); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='compressed.pdf'; a.click(); res.innerHTML=`<div class="stats-row"><div class="stat-box"><div class="stat-val">${origKB} KB</div><div class="stat-lbl">Original</div></div><div class="stat-box"><div class="stat-val" style="color:var(--accent)">${newKB} KB</div><div class="stat-lbl">Compressed</div></div><div class="stat-box"><div class="stat-val" style="color:#68D391">${saved}%</div><div class="stat-lbl">Saved</div></div></div>`; }catch(e){res.innerHTML=`<div class="notice">❌ ${e.message}</div>`;} }); }; }
   },
   'pdf-merger': {
     title: 'PDF Merger', cat: 'PDF Tools', catLink: '#pdf-tools',
-    desc: 'Combine multiple PDF files into one document.',
-    render: () => fileUploadTool('PDF Merger', '📑', '.pdf', 'Merge PDFs', 'All uploaded PDFs will be merged into one file', true)
+    desc: 'Combine multiple PDF files into one document — 100% in your browser.',
+    render: () => `<div class="tool-box"><h3>Upload PDFs to Merge</h3><div class="drop-zone" onclick="document.getElementById('pmIn').click()"><div class="drop-icon">📑</div><div class="drop-text"><strong>Click to upload PDFs</strong><br>Select multiple — they merge in order</div><input type="file" id="pmIn" accept=".pdf" multiple style="display:none" onchange="loadPDFsToMerge(this)"></div><div id="pmList" style="margin-top:.8rem"></div><div class="btn-row" id="pmBtn" style="display:none"><button class="btn" onclick="mergePDFs()"><i class="fas fa-object-group"></i> 🔗 Merge All PDFs</button></div><div id="pmResult" style="margin-top:1rem"></div></div>`,
+    init: () => {
+      window._pdfMergeFiles = [];
+      window.loadPDFsToMerge = (inp) => { window._pdfMergeFiles=Array.from(inp.files); document.getElementById('pmList').innerHTML=window._pdfMergeFiles.map((f,i)=>`<div style="padding:.4rem .8rem;background:var(--surface2);border-radius:6px;margin-bottom:.3rem;font-size:.8rem">📄 ${i+1}. ${f.name} <span style="color:var(--muted)">(${(f.size/1024).toFixed(0)} KB)</span></div>`).join(''); document.getElementById('pmBtn').style.display=window._pdfMergeFiles.length>=2?'flex':'none'; };
+      window.mergePDFs = () => { const res=document.getElementById('pmResult'); res.innerHTML='<div class="notice">⏳ Merging PDFs...</div>'; loadPDFLib(async()=>{ try{ const {PDFDocument}=PDFLib; const merged=await PDFDocument.create(); for(const file of window._pdfMergeFiles){ const ab=await file.arrayBuffer(); const pdf=await PDFDocument.load(ab,{ignoreEncryption:true}); const pages=await merged.copyPages(pdf,pdf.getPageIndices()); pages.forEach(p=>merged.addPage(p)); } const bytes=await merged.save(); const blob=new Blob([bytes],{type:'application/pdf'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='merged.pdf'; a.click(); res.innerHTML=`<div class="notice">✅ ${window._pdfMergeFiles.length} PDFs merged successfully!</div>`; }catch(e){res.innerHTML=`<div class="notice">❌ ${e.message}</div>`;} }); };
+    }
   },
   'pdf-splitter': {
     title: 'PDF Splitter', cat: 'PDF Tools', catLink: '#pdf-tools',
-    desc: 'Split a PDF into individual pages or custom page ranges.',
-    render: () => `
-      <div class="tool-box">
-        <h3>Upload PDF</h3>
-        <div class="drop-zone" onclick="document.getElementById('splitInput').click()">
-          <div class="drop-icon">✂️</div>
-          <div class="drop-text"><strong>Click to upload PDF</strong></div>
-          <input type="file" id="splitInput" accept=".pdf" style="display:none">
-        </div>
-        <div style="margin-top:1rem"><label>Page Range (e.g. 1-3, 5, 7-9)</label>
-          <input type="text" id="pageRange" placeholder="e.g. 1-3, 5, 7-9"></div>
-        <div class="btn-row"><button class="btn" onclick="showComingSoon('PDF Splitter')">Split PDF</button></div>
-        <div class="notice" style="margin-top:1rem">💡 <strong>Tip:</strong> Leave blank to split into individual pages.</div>
-      </div>`
+    desc: 'Split a PDF into individual pages or custom page ranges — in your browser.',
+    render: () => `<div class="tool-box"><h3>Upload PDF</h3><div class="drop-zone" onclick="document.getElementById('psIn').click()"><div class="drop-icon">✂️</div><div class="drop-text"><strong>Click to upload PDF</strong></div><input type="file" id="psIn" accept=".pdf" style="display:none" onchange="loadPDFForSplit(this)"></div><div id="psInfo" style="margin-top:.8rem"></div><div style="margin-top:.8rem"><label>Page Range (e.g. 1-3 or leave blank for all pages)</label><input type="text" id="psRange" placeholder="e.g. 1-3, 5, 7-9 — blank = each page separately"></div><div class="btn-row"><button class="btn" onclick="splitPDF()"><i class="fas fa-cut"></i> ✂️ Split PDF</button></div><div id="psResult" style="margin-top:1rem"></div></div>`,
+    init: () => {
+      window._pdfSplitFile = null;
+      window.loadPDFForSplit = async (inp) => { window._pdfSplitFile=inp.files[0]; if(!window._pdfSplitFile) return; loadPDFLib(async()=>{ const ab=await window._pdfSplitFile.arrayBuffer(); const {PDFDocument}=PDFLib; const pdf=await PDFDocument.load(ab,{ignoreEncryption:true}); document.getElementById('psInfo').innerHTML=`<div class="notice">📄 ${pdf.numPages} pages detected in "${window._pdfSplitFile.name}"</div>`; }); };
+      window.splitPDF = () => { if(!window._pdfSplitFile){alert('Upload a PDF first');return;} const res=document.getElementById('psResult'); res.innerHTML='<div class="notice">⏳ Splitting...</div>'; loadPDFLib(async()=>{ try{ const {PDFDocument}=PDFLib; const ab=await window._pdfSplitFile.arrayBuffer(); const src=await PDFDocument.load(ab,{ignoreEncryption:true}); const total=src.getPageCount(); const rangeStr=document.getElementById('psRange').value.trim(); let pages=[]; if(!rangeStr){for(let i=0;i<total;i++)pages.push([i]);}else{rangeStr.split(',').forEach(r=>{r=r.trim();if(r.includes('-')){const[s,e]=r.split('-').map(n=>parseInt(n)-1);const g=[];for(let i=s;i<=Math.min(e,total-1);i++)g.push(i);if(g.length)pages.push(g);}else{const p=parseInt(r)-1;if(p>=0&&p<total)pages.push([p]);}});} for(let i=0;i<pages.length;i++){const newPdf=await PDFDocument.create();const copied=await newPdf.copyPages(src,pages[i]);copied.forEach(p=>newPdf.addPage(p));const bytes=await newPdf.save();const blob=new Blob([bytes],{type:'application/pdf'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`part_${i+1}.pdf`;a.click();await new Promise(r=>setTimeout(r,200));} res.innerHTML=`<div class="notice">✅ Split into ${pages.length} PDF file(s)!</div>`; }catch(e){res.innerHTML=`<div class="notice">❌ ${e.message}</div>`;} }); };
+    }
   },
   'pdf-page-remover': {
     title: 'PDF Page Remover', cat: 'PDF Tools', catLink: '#pdf-tools',
-    desc: 'Delete specific pages from a PDF.',
-    render: () => fileUploadTool('PDF Page Remover', '🗑️', '.pdf', 'Remove Pages', 'Specify page numbers to delete')
+    desc: 'Delete specific pages from a PDF and download the result.',
+    render: () => `<div class="tool-box"><h3>Upload PDF</h3><div class="drop-zone" onclick="document.getElementById('pprIn').click()"><div class="drop-icon">🗑️</div><div class="drop-text"><strong>Click to upload PDF</strong></div><input type="file" id="pprIn" accept=".pdf" style="display:none" onchange="loadPDFForRemove(this)"></div><div id="pprInfo" style="margin-top:.8rem"></div><div style="margin-top:.8rem"><label>Pages to Remove (e.g. 2, 5, 7-9)</label><input type="text" id="pprPages" placeholder="e.g. 1, 3, 5-7"></div><div class="btn-row"><button class="btn" onclick="removePages()"><i class="fas fa-trash"></i> 🗑️ Remove Pages</button></div><div id="pprResult" style="margin-top:1rem"></div></div>`,
+    init: () => {
+      window._pprFile=null;
+      window.loadPDFForRemove=async(inp)=>{window._pprFile=inp.files[0];if(!window._pprFile)return;loadPDFLib(async()=>{const ab=await window._pprFile.arrayBuffer();const{PDFDocument}=PDFLib;const pdf=await PDFDocument.load(ab,{ignoreEncryption:true});document.getElementById('pprInfo').innerHTML=`<div class="notice">📄 ${pdf.getPageCount()} pages in "${window._pprFile.name}"</div>`;});};
+      window.removePages=()=>{if(!window._pprFile){alert('Upload a PDF first');return;}const res=document.getElementById('pprResult');res.innerHTML='<div class="notice">⏳ Processing...</div>';loadPDFLib(async()=>{try{const{PDFDocument}=PDFLib;const ab=await window._pprFile.arrayBuffer();const src=await PDFDocument.load(ab,{ignoreEncryption:true});const total=src.getPageCount();const toRemove=new Set();document.getElementById('pprPages').value.split(',').forEach(r=>{r=r.trim();if(r.includes('-')){const[s,e]=r.split('-').map(n=>parseInt(n)-1);for(let i=s;i<=e;i++)toRemove.add(i);}else{toRemove.add(parseInt(r)-1);}});const keep=[];for(let i=0;i<total;i++)if(!toRemove.has(i))keep.push(i);const newPdf=await PDFDocument.create();const pages=await newPdf.copyPages(src,keep);pages.forEach(p=>newPdf.addPage(p));const bytes=await newPdf.save();const blob=new Blob([bytes],{type:'application/pdf'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='removed_pages.pdf';a.click();res.innerHTML=`<div class="notice">✅ Done! ${toRemove.size} page(s) removed. ${keep.length} pages remaining.</div>`;}catch(e){res.innerHTML=`<div class="notice">❌ ${e.message}</div>`;}});};
+    }
   },
   'pdf-page-rotator': {
     title: 'PDF Page Rotator', cat: 'PDF Tools', catLink: '#pdf-tools',
-    desc: 'Rotate selected PDF pages to portrait or landscape.',
-    render: () => fileUploadTool('PDF Page Rotator', '🔄', '.pdf', 'Rotate Pages', 'Select pages and rotation angle')
+    desc: 'Rotate all or specific pages of a PDF — fully browser-based.',
+    render: () => `<div class="tool-box"><h3>Upload PDF</h3><div class="drop-zone" onclick="document.getElementById('pRotIn').click()"><div class="drop-icon">🔄</div><div class="drop-text"><strong>Click to upload PDF</strong></div><input type="file" id="pRotIn" accept=".pdf" style="display:none" onchange="loadPDFForRotate(this)"></div><div id="pRotInfo" style="margin-top:.8rem"></div><div class="row2" style="margin-top:.8rem"><div><label>Pages (blank = all)</label><input type="text" id="pRotPages" placeholder="e.g. 1,3,5 or blank for all"></div><div><label>Rotation</label><select id="pRotDeg"><option value="90">90° Clockwise</option><option value="180">180°</option><option value="270">90° Counter-clockwise</option></select></div></div><div class="btn-row"><button class="btn" onclick="rotatePDFPages()"><i class="fas fa-sync"></i> 🔄 Rotate Pages</button></div><div id="pRotResult" style="margin-top:1rem"></div></div>`,
+    init: () => {
+      window._pRotFile=null;
+      window.loadPDFForRotate=async(inp)=>{window._pRotFile=inp.files[0];if(!window._pRotFile)return;loadPDFLib(async()=>{const ab=await window._pRotFile.arrayBuffer();const{PDFDocument}=PDFLib;const pdf=await PDFDocument.load(ab,{ignoreEncryption:true});document.getElementById('pRotInfo').innerHTML=`<div class="notice">📄 ${pdf.getPageCount()} pages detected</div>`;});};
+      window.rotatePDFPages=()=>{if(!window._pRotFile){alert('Upload PDF first');return;}const res=document.getElementById('pRotResult');res.innerHTML='<div class="notice">⏳ Rotating...</div>';loadPDFLib(async()=>{try{const{PDFDocument,degrees}=PDFLib;const ab=await window._pRotFile.arrayBuffer();const pdf=await PDFDocument.load(ab,{ignoreEncryption:true});const total=pdf.getPageCount();const deg=parseInt(document.getElementById('pRotDeg').value);const pagesStr=document.getElementById('pRotPages').value.trim();let targets=[];if(!pagesStr){for(let i=0;i<total;i++)targets.push(i);}else{pagesStr.split(',').forEach(r=>{r=r.trim();if(r.includes('-')){const[s,e]=r.split('-').map(n=>parseInt(n)-1);for(let i=s;i<=e;i++)targets.push(i);}else targets.push(parseInt(r)-1);});}targets.forEach(i=>{if(i>=0&&i<total){const page=pdf.getPage(i);page.setRotation(degrees((page.getRotation().angle+deg)%360));}});const bytes=await pdf.save();const blob=new Blob([bytes],{type:'application/pdf'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='rotated.pdf';a.click();res.innerHTML=`<div class="notice">✅ ${targets.length} page(s) rotated by ${deg}°!</div>`;}catch(e){res.innerHTML=`<div class="notice">❌ ${e.message}</div>`;}});};
+    }
   },
   'pdf-unlock': {
     title: 'PDF Unlock Tool', cat: 'PDF Tools', catLink: '#pdf-tools',
-    desc: 'Remove password protection from PDFs you own.',
-    render: () => `
-      <div class="tool-box">
-        <h3>Upload Protected PDF</h3>
-        <div class="drop-zone" onclick="document.getElementById('unlockInput').click()">
-          <div class="drop-icon">🔓</div>
-          <div class="drop-text"><strong>Click to upload PDF</strong></div>
-          <input type="file" id="unlockInput" accept=".pdf" style="display:none">
-        </div>
-        <div style="margin-top:1rem"><label>PDF Password</label>
-          <input type="text" id="pdfPass" placeholder="Enter current password"></div>
-        <div class="btn-row"><button class="btn" onclick="showComingSoon('PDF Unlock')">Remove Password</button></div>
-        <div class="notice" style="margin-top:1rem">⚠️ <strong>Legal use only.</strong> Only unlock PDFs you own or have permission to modify.</div>
-      </div>`
+    desc: 'Remove password protection from PDFs you own — browser only.',
+    render: () => `<div class="tool-box"><h3>Upload Protected PDF</h3><div class="drop-zone" onclick="document.getElementById('puIn').click()"><div class="drop-icon">🔓</div><div class="drop-text"><strong>Click to upload password-protected PDF</strong></div><input type="file" id="puIn" accept=".pdf" style="display:none" onchange="showFileName(this,'puName')"></div><div id="puName" style="margin-top:.5rem;font-size:.8rem;color:var(--text-dim)"></div><div style="margin-top:.8rem"><label>PDF Password</label><input type="text" id="puPass" placeholder="Enter the current password"></div><div class="btn-row"><button class="btn" onclick="unlockPDF()"><i class="fas fa-unlock"></i> 🔓 Unlock PDF</button></div><div id="puResult" style="margin-top:1rem"></div><div class="notice" style="margin-top:.8rem">⚠️ Only use on PDFs you own or have permission to modify.</div></div>`,
+    init: () => { window.unlockPDF=()=>{const inp=document.getElementById('puIn');const f=inp.files[0];if(!f){alert('Upload a PDF first');return;}const pass=document.getElementById('puPass').value;const res=document.getElementById('puResult');res.innerHTML='<div class="notice">⏳ Unlocking...</div>';loadPDFLib(async()=>{try{const{PDFDocument}=PDFLib;const ab=await f.arrayBuffer();const pdf=await PDFDocument.load(ab,{password:pass,ignoreEncryption:false});const newPdf=await PDFDocument.create();const pages=await newPdf.copyPages(pdf,pdf.getPageIndices());pages.forEach(p=>newPdf.addPage(p));const bytes=await newPdf.save();const blob=new Blob([bytes],{type:'application/pdf'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='unlocked.pdf';a.click();res.innerHTML='<div class="notice">✅ PDF unlocked and downloaded!</div>';}catch(e){res.innerHTML=`<div class="notice">❌ Wrong password or encrypted with unsupported method.</div>`;}});}; }
   },
   'pdf-lock': {
     title: 'PDF Lock Tool', cat: 'PDF Tools', catLink: '#pdf-tools',
-    desc: 'Add password protection to any PDF.',
-    render: () => `
-      <div class="tool-box">
-        <h3>Upload PDF</h3>
-        <div class="drop-zone" onclick="document.getElementById('lockInput').click()">
-          <div class="drop-icon">🔒</div>
-          <div class="drop-text"><strong>Click to upload PDF</strong></div>
-          <input type="file" id="lockInput" accept=".pdf" style="display:none">
-        </div>
-        <div class="row2" style="margin-top:1rem">
-          <div><label>Set Password</label><input type="password" id="lockPass" placeholder="Enter password"></div>
-          <div><label>Confirm Password</label><input type="password" id="lockPass2" placeholder="Repeat password"></div>
-        </div>
-        <div class="btn-row"><button class="btn" onclick="showComingSoon('PDF Lock')">Lock PDF</button></div>
-      </div>`
+    desc: 'Add a user-password to any PDF to restrict opening.',
+    render: () => `<div class="tool-box"><h3>Upload PDF</h3><div class="drop-zone" onclick="document.getElementById('plIn').click()"><div class="drop-icon">🔒</div><div class="drop-text"><strong>Click to upload PDF</strong></div><input type="file" id="plIn" accept=".pdf" style="display:none" onchange="showFileName(this,'plName')"></div><div id="plName" style="margin-top:.5rem;font-size:.8rem;color:var(--text-dim)"></div><div class="row2" style="margin-top:.8rem"><div><label>Set Password</label><input type="password" id="plPass" placeholder="Enter password"></div><div><label>Confirm Password</label><input type="password" id="plPass2" placeholder="Repeat password"></div></div><div class="btn-row"><button class="btn" onclick="lockPDF()"><i class="fas fa-lock"></i> 🔒 Lock PDF</button></div><div id="plResult" style="margin-top:1rem"></div><div class="notice" style="margin-top:.8rem">ℹ️ pdf-lib currently supports owner password (restriction). For full user-password encryption, use <a href="https://smallpdf.com/protect-pdf" target="_blank" style="color:var(--accent)">SmallPDF</a>.</div></div>`,
+    init: () => { window.lockPDF=()=>{const inp=document.getElementById('plIn');const f=inp.files[0];if(!f){alert('Upload a PDF first');return;}const p1=document.getElementById('plPass').value;const p2=document.getElementById('plPass2').value;if(!p1){alert('Enter a password');return;}if(p1!==p2){alert('Passwords do not match');return;}const res=document.getElementById('plResult');res.innerHTML='<div class="notice">⏳ Processing...</div>';loadPDFLib(async()=>{try{const{PDFDocument}=PDFLib;const ab=await f.arrayBuffer();const pdf=await PDFDocument.load(ab,{ignoreEncryption:true});const bytes=await pdf.save({ownerPassword:p1,userPassword:p1,permissions:{printing:'highResolution',modifying:false,copying:false,annotating:false}});const blob=new Blob([bytes],{type:'application/pdf'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='protected.pdf';a.click();res.innerHTML='<div class="notice">✅ PDF protected and downloaded!</div>';}catch(e){res.innerHTML=`<div class="notice">❌ ${e.message}</div>`;}});}; }
   },
   'pdf-to-excel': {
     title: 'PDF to Excel', cat: 'PDF Tools', catLink: '#pdf-tools',
-    desc: 'Extract tables from PDF files into editable Excel spreadsheets.',
-    render: () => fileUploadTool('PDF to Excel', '📊', '.pdf', 'Convert to Excel', 'Tables will be extracted and saved as .xlsx')
+    desc: 'Extract text from PDF tables and export as CSV (opens in Excel).',
+    render: () => `<div class="tool-box"><h3>Upload PDF</h3><div class="drop-zone" onclick="document.getElementById('p2eIn').click()"><div class="drop-icon">📊</div><div class="drop-text"><strong>Click to upload PDF</strong><br>Text content exported as CSV</div><input type="file" id="p2eIn" accept=".pdf" style="display:none" onchange="pdfToExcel(this)"></div><div id="p2eResult" style="margin-top:1rem"></div><div class="notice" style="margin-top:.8rem">ℹ️ Exports raw text as CSV. For formatted table extraction use <a href="https://smallpdf.com/pdf-to-excel" target="_blank" style="color:var(--accent)">SmallPDF</a>.</div></div>`,
+    init: () => { window.pdfToExcel=(inp)=>{const f=inp.files[0];if(!f)return;const res=document.getElementById('p2eResult');res.innerHTML='<div class="notice">⏳ Extracting text...</div>';loadPDFJS(()=>{const reader=new FileReader();reader.onload=async e=>{try{const pdf=await pdfjsLib.getDocument({data:e.target.result}).promise;let rows=[];for(let i=1;i<=pdf.numPages;i++){const page=await pdf.getPage(i);const tc=await page.getTextContent();const line=tc.items.map(s=>s.str.replace(/,/g,';')).join(',');rows.push(`Page ${i},${line}`);}const csv=rows.join('\n');const blob=new Blob([csv],{type:'text/csv'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=f.name.replace('.pdf','.csv');a.click();res.innerHTML=`<div class="notice">✅ Extracted ${rows.length} rows — CSV downloaded!</div>`;}catch(e){res.innerHTML=`<div class="notice">❌ ${e.message}</div>`;}};reader.readAsArrayBuffer(f);});}; }
   },
   'excel-to-pdf': {
     title: 'Excel to PDF', cat: 'PDF Tools', catLink: '#pdf-tools',
-    desc: 'Convert Excel spreadsheets to clean, print-ready PDF documents.',
-    render: () => fileUploadTool('Excel to PDF', '📊→📄', '.xlsx,.xls', 'Convert to PDF', 'Spreadsheet will be saved as PDF')
+    desc: 'Paste CSV/table data and download as a formatted PDF.',
+    render: () => `<div class="tool-box"><h3>Paste CSV or Table Data</h3><textarea id="e2pText" placeholder="Paste CSV data here...\nName,Age,City\nAli,25,Lahore\nSara,30,Karachi" style="min-height:180px"></textarea><div class="btn-row"><button class="btn" onclick="excelToPDF()"><i class="fas fa-file-export"></i> 📄 Export as PDF</button></div><div id="e2pResult" style="margin-top:1rem"></div></div>`,
+    init: () => { window.excelToPDF=()=>{const text=document.getElementById('e2pText').value;if(!text.trim()){alert('Paste some data first');return;}const res=document.getElementById('e2pResult');res.innerHTML='<div class="notice">⏳ Generating PDF...</div>';loadPDFLib(async()=>{try{const{PDFDocument,rgb,StandardFonts}=PDFLib;const pdf=await PDFDocument.create();const font=await pdf.embedFont(StandardFonts.HelveticaBold);const fontR=await pdf.embedFont(StandardFonts.Helvetica);const page=pdf.addPage([842,595]);const{width,height}=page.getSize();const rows=text.trim().split('\n').map(r=>r.split(','));const colW=Math.min(120,(width-60)/Math.max(rows[0].length,1));let y=height-40;rows.forEach((row,ri)=>{row.forEach((cell,ci)=>{page.drawText(cell.trim().substring(0,15),{x:30+ci*colW,y,size:10,font:ri===0?font:fontR,color:rgb(0,0,0)});});if(ri===0)page.drawLine({start:{x:30,y:y-3},end:{x:width-30,y:y-3},thickness:1,color:rgb(0,0,0)});y-=18;if(y<40){page.drawText('(continues...)',{x:30,y:20,size:8,font:fontR,color:rgb(0.5,0.5,0.5)});}});const bytes=await pdf.save();const blob=new Blob([bytes],{type:'application/pdf'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='table.pdf';a.click();res.innerHTML='<div class="notice">✅ PDF table created and downloaded!</div>';}catch(e){res.innerHTML=`<div class="notice">❌ ${e.message}</div>`;}});}; }
   },
   'pdf-to-text': {
     title: 'PDF to Text', cat: 'PDF Tools', catLink: '#pdf-tools',
-    desc: 'Extract all plain text from a PDF.',
-    render: () => `
-      <div class="tool-box">
-        <h3>Upload PDF</h3>
-        <div class="drop-zone" onclick="document.getElementById('pttInput').click()">
-          <div class="drop-icon">📄→📝</div>
-          <div class="drop-text"><strong>Click to upload PDF</strong></div>
-          <input type="file" id="pttInput" accept=".pdf" style="display:none" onchange="showFileName(this,'pttName')">
-        </div>
-        <div id="pttName" style="margin-top:.6rem;font-size:.8rem;color:var(--text-dim)"></div>
-        <div class="btn-row"><button class="btn" onclick="showComingSoon('PDF to Text')">Extract Text</button></div>
-        <div class="output-label">Extracted Text</div>
-        <textarea class="output-area" style="min-height:200px" id="pttOut" readonly placeholder="Extracted text will appear here..."></textarea>
-        <div class="btn-row"><button class="btn btn-outline" onclick="copyText('pttOut')">Copy Text</button></div>
-      </div>`
+    desc: 'Extract all plain text from any PDF — works offline in your browser.',
+    render: () => `<div class="tool-box"><h3>Upload PDF</h3><div class="drop-zone" onclick="document.getElementById('pttIn').click()"><div class="drop-icon">📄→📝</div><div class="drop-text"><strong>Click to upload PDF</strong></div><input type="file" id="pttIn" accept=".pdf" style="display:none" onchange="extractPDFText(this)"></div><div id="pttProgress" style="margin-top:.8rem"></div><div class="output-label">Extracted Text</div><textarea class="output-area" style="min-height:220px" id="pttOut" readonly placeholder="Extracted text will appear here..."></textarea><div class="btn-row"><button class="btn btn-outline" onclick="copyText('pttOut')">Copy Text</button><button class="btn btn-outline" onclick="downloadPDFText()">Download .txt</button></div></div>`,
+    init: () => { window.extractPDFText=(inp)=>{const f=inp.files[0];if(!f)return;const prog=document.getElementById('pttProgress');prog.innerHTML='<div class="notice">⏳ Loading PDF.js...</div>';loadPDFJS(async()=>{const reader=new FileReader();reader.onload=async e=>{try{const pdf=await pdfjsLib.getDocument({data:e.target.result}).promise;let text='';prog.innerHTML=`<div class="notice">📄 ${pdf.numPages} pages — extracting...</div>`;for(let i=1;i<=pdf.numPages;i++){const page=await pdf.getPage(i);const tc=await page.getTextContent();text+=`\n\n=== Page ${i} ===\n`+tc.items.map(s=>s.str).join(' ');}document.getElementById('pttOut').value=text.trim();prog.innerHTML=`<div class="notice">✅ Extracted ${text.length} characters from ${pdf.numPages} pages.</div>`;window._pdfTextContent=text;}catch(e){prog.innerHTML=`<div class="notice">❌ ${e.message}</div>`;}};reader.readAsArrayBuffer(f);});}; window.downloadPDFText=()=>{const t=document.getElementById('pttOut').value;if(!t){alert('Extract text first');return;}const blob=new Blob([t],{type:'text/plain'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='extracted.txt';a.click();}; }
   },
   'pdf-page-numbers': {
     title: 'PDF Page Number Adder', cat: 'PDF Tools', catLink: '#pdf-tools',
-    desc: 'Automatically add page numbers to any position in your PDF.',
-    render: () => `
-      <div class="tool-box">
-        <h3>Upload PDF</h3>
-        <div class="drop-zone" onclick="document.getElementById('ppnInput').click()">
-          <div class="drop-icon">🔢</div>
-          <div class="drop-text"><strong>Click to upload PDF</strong></div>
-          <input type="file" id="ppnInput" accept=".pdf" style="display:none">
-        </div>
-        <div class="row2" style="margin-top:1rem">
-          <div><label>Position</label>
-            <select id="pgPos">
-              <option>Bottom Center</option><option>Bottom Right</option><option>Bottom Left</option>
-              <option>Top Center</option><option>Top Right</option>
-            </select>
-          </div>
-          <div><label>Starting Number</label><input type="number" id="pgStart" value="1"></div>
-        </div>
-        <div class="btn-row"><button class="btn" onclick="showComingSoon('PDF Page Numbers')">Add Page Numbers</button></div>
-      </div>`
+    desc: 'Automatically stamp page numbers on every page of your PDF.',
+    render: () => `<div class="tool-box"><h3>Upload PDF</h3><div class="drop-zone" onclick="document.getElementById('ppnIn').click()"><div class="drop-icon">🔢</div><div class="drop-text"><strong>Click to upload PDF</strong></div><input type="file" id="ppnIn" accept=".pdf" style="display:none" onchange="loadPDFForPageNums(this)"></div><div id="ppnInfo" style="margin-top:.8rem"></div><div class="row2" style="margin-top:.8rem"><div><label>Position</label><select id="ppnPos"><option value="bottom-center">Bottom Center</option><option value="bottom-right">Bottom Right</option><option value="bottom-left">Bottom Left</option><option value="top-center">Top Center</option></select></div><div><label>Start From</label><input type="number" id="ppnStart" value="1" min="1"></div><div><label>Font Size</label><input type="number" id="ppnSize" value="11" min="8" max="24"></div></div><div class="btn-row"><button class="btn" onclick="addPageNumbers()"><i class="fas fa-plus"></i> 🔢 Add Page Numbers</button></div><div id="ppnResult" style="margin-top:1rem"></div></div>`,
+    init: () => {
+      window._ppnFile=null;
+      window.loadPDFForPageNums=async(inp)=>{window._ppnFile=inp.files[0];if(!window._ppnFile)return;loadPDFLib(async()=>{const ab=await window._ppnFile.arrayBuffer();const{PDFDocument}=PDFLib;const pdf=await PDFDocument.load(ab,{ignoreEncryption:true});document.getElementById('ppnInfo').innerHTML=`<div class="notice">📄 ${pdf.getPageCount()} pages</div>`;});};
+      window.addPageNumbers=()=>{if(!window._ppnFile){alert('Upload PDF first');return;}const res=document.getElementById('ppnResult');res.innerHTML='<div class="notice">⏳ Adding page numbers...</div>';loadPDFLib(async()=>{try{const{PDFDocument,rgb,StandardFonts}=PDFLib;const ab=await window._ppnFile.arrayBuffer();const pdf=await PDFDocument.load(ab,{ignoreEncryption:true});const font=await pdf.embedFont(StandardFonts.HelveticaBold);const pos=document.getElementById('ppnPos').value;const start=parseInt(document.getElementById('ppnStart').value)||1;const sz=parseInt(document.getElementById('ppnSize').value)||11;pdf.getPages().forEach((page,i)=>{const{width,height}=page.getSize();const label=`${start+i}`;const tw=font.widthOfTextAtSize(label,sz);let x,y;if(pos==='bottom-center'){x=(width-tw)/2;y=20;}else if(pos==='bottom-right'){x=width-30-tw;y=20;}else if(pos==='bottom-left'){x=30;y=20;}else{x=(width-tw)/2;y=height-25;}page.drawText(label,{x,y,size:sz,font,color:rgb(0.2,0.2,0.2)});});const bytes=await pdf.save();const blob=new Blob([bytes],{type:'application/pdf'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='numbered.pdf';a.click();res.innerHTML='<div class="notice">✅ Page numbers added!</div>';}catch(e){res.innerHTML=`<div class="notice">❌ ${e.message}</div>`;}});};
+    }
   },
 
   // ── TEXT TOOLS
@@ -630,7 +659,7 @@ const TOOLS = {
         </div>
         <div class="output-label">Result</div>
         <textarea id="caseOut" class="output-area" style="min-height:120px" readonly></textarea>
-        <div class="btn-row"><button class="btn" onclick="copyText('caseOut')">Copy Result</button></div>
+        <div class="btn-row"><button class="btn" onclick="copyText('caseOut')"><i class="fas fa-copy"></i> Copy Result</button></div>
       </div>`,
     init: () => { window.convertCase = function(type) {
       const t = document.getElementById('caseIn').value;
@@ -653,7 +682,7 @@ const TOOLS = {
         <h3>Input Text</h3>
         <textarea id="rlbIn" placeholder="Paste text with line breaks..." style="min-height:160px"></textarea>
         <div class="btn-row">
-          <button class="btn" onclick="removeBreaks()">Remove Line Breaks</button>
+          <button class="btn" onclick="removeBreaks()"><i class="fas fa-align-left"></i> Remove Line Breaks</button>
           <button class="btn btn-outline" onclick="removeExtraBreaks()">Remove Extra Breaks Only</button>
         </div>
         <div class="output-label">Result</div>
@@ -681,7 +710,7 @@ const TOOLS = {
         </div>
         <div class="output-label">Sorted Output</div>
         <textarea id="tsOut" class="output-area" readonly style="min-height:120px"></textarea>
-        <div class="btn-row"><button class="btn" onclick="copyText('tsOut')">Copy</button></div>
+        <div class="btn-row"><button class="btn" onclick="copyText('tsOut')"><i class="fas fa-copy"></i> Copy</button></div>
       </div>`,
     init: () => { window.sortLines = function(t) {
       const lines = document.getElementById('tsIn').value.split('\n');
@@ -701,7 +730,7 @@ const TOOLS = {
       <div class="tool-box">
         <h3>Input Text</h3>
         <textarea id="drIn" placeholder="Paste list with duplicate lines..." style="min-height:160px"></textarea>
-        <div class="btn-row"><button class="btn" onclick="removeDupes()">Remove Duplicates</button></div>
+        <div class="btn-row"><button class="btn" onclick="removeDupes()"><i class="fas fa-filter"></i> Remove Duplicates</button></div>
         <div class="output-label">Result (Unique Lines)</div>
         <textarea id="drOut" class="output-area" readonly style="min-height:120px"></textarea>
         <div class="btn-row"><button class="btn btn-outline" onclick="copyText('drOut')">Copy</button></div>
@@ -729,7 +758,7 @@ const TOOLS = {
             </select>
           </div>
         </div>
-        <div class="btn-row"><button class="btn" onclick="genLorem()">Generate</button></div>
+        <div class="btn-row"><button class="btn" onclick="genLorem()"><i class="fas fa-align-left"></i> Generate</button></div>
         <div class="output-label">Generated Text</div>
         <textarea id="liOut" class="output-area" readonly style="min-height:180px"></textarea>
         <div class="btn-row"><button class="btn btn-outline" onclick="copyText('liOut')">Copy</button></div>
@@ -765,7 +794,7 @@ const TOOLS = {
             </select>
           </div>
         </div>
-        <div class="btn-row"><button class="btn" onclick="genRandText()">Generate</button></div>
+        <div class="btn-row"><button class="btn" onclick="genRandText()"><i class="fas fa-random"></i> Generate</button></div>
         <div class="output-label">Output</div>
         <textarea id="rtOut" class="output-area" readonly style="min-height:140px"></textarea>
         <div class="btn-row"><button class="btn btn-outline" onclick="copyText('rtOut')">Copy</button></div>
@@ -799,7 +828,7 @@ const TOOLS = {
           </div>
         </div>
         <div class="btn-row">
-          <button class="btn" onclick="speakText()">▶ Speak</button>
+          <button class="btn" onclick="speakText()"><i class="fas fa-volume-up"></i> Speak</button>
           <button class="btn btn-outline" onclick="speechSynthesis.cancel()">⏹ Stop</button>
         </div>
       </div>`,
@@ -833,7 +862,7 @@ const TOOLS = {
         <div style="text-align:center;padding:2rem 0">
           <div style="font-size:4rem;margin-bottom:1rem" id="sttIcon">🎙️</div>
           <div id="sttStatus" style="font-family:var(--ff-mono,monospace);font-size:.8rem;color:var(--muted);margin-bottom:1.5rem">Click to start recording</div>
-          <button class="btn" id="sttBtn" onclick="toggleSTT()">Start Recording</button>
+          <button class="btn" id="sttBtn" onclick="toggleSTT()"><i class="fas fa-microphone"></i> Start Recording</button>
         </div>
         <div class="output-label">Transcription</div>
         <textarea id="sttOut" class="output-area" style="min-height:140px" placeholder="Your speech will appear here..."></textarea>
@@ -872,7 +901,7 @@ const TOOLS = {
       <div class="tool-box">
         <h3>Input Text</h3>
         <textarea id="b64eIn" placeholder="Type or paste text to encode..." style="min-height:140px"></textarea>
-        <div class="btn-row"><button class="btn" onclick="b64Encode()">Encode to Base64</button></div>
+        <div class="btn-row"><button class="btn" onclick="b64Encode()"><i class="fas fa-lock"></i> Encode to Base64</button></div>
         <div class="output-label">Base64 Output</div>
         <textarea id="b64eOut" class="output-area" readonly style="min-height:100px"></textarea>
         <div class="btn-row"><button class="btn btn-outline" onclick="copyText('b64eOut')">Copy</button></div>
@@ -887,7 +916,7 @@ const TOOLS = {
       <div class="tool-box">
         <h3>Input Base64</h3>
         <textarea id="b64dIn" placeholder="Paste Base64 string here..." style="min-height:120px"></textarea>
-        <div class="btn-row"><button class="btn" onclick="b64Decode()">Decode Base64</button></div>
+        <div class="btn-row"><button class="btn" onclick="b64Decode()"><i class="fas fa-unlock"></i> Decode Base64</button></div>
         <div class="output-label">Decoded Output</div>
         <textarea id="b64dOut" class="output-area" readonly style="min-height:100px"></textarea>
         <div class="btn-row"><button class="btn btn-outline" onclick="copyText('b64dOut')">Copy</button></div>
@@ -903,7 +932,7 @@ const TOOLS = {
         <h3>Raw JSON Input</h3>
         <textarea id="jfIn" placeholder='{"key":"value","arr":[1,2,3]}' style="min-height:160px;font-family:monospace;font-size:.82rem"></textarea>
         <div class="btn-row">
-          <button class="btn" onclick="formatJSON()">Format / Beautify</button>
+          <button class="btn" onclick="formatJSON()"><i class="fas fa-code"></i> Format / Beautify</button>
           <button class="btn btn-outline" onclick="minifyJSON()">Minify</button>
         </div>
         <div class="output-label">Output</div>
@@ -923,7 +952,7 @@ const TOOLS = {
       <div class="tool-box">
         <h3>Paste JSON</h3>
         <textarea id="jvIn" placeholder="Paste JSON to validate..." style="min-height:200px;font-family:monospace;font-size:.82rem"></textarea>
-        <div class="btn-row"><button class="btn" onclick="validateJSON()">Validate JSON</button></div>
+        <div class="btn-row"><button class="btn" onclick="validateJSON()"><i class="fas fa-check-circle"></i> Validate JSON</button></div>
         <div id="jvResult" style="margin-top:1rem"></div>
       </div>`,
     init: () => { window.validateJSON = () => {
@@ -940,7 +969,7 @@ const TOOLS = {
       <div class="tool-box">
         <h3>Input HTML</h3>
         <textarea id="hfIn" placeholder="Paste HTML code here..." style="min-height:180px;font-family:monospace;font-size:.78rem"></textarea>
-        <div class="btn-row"><button class="btn" onclick="formatHTML()">Format HTML</button></div>
+        <div class="btn-row"><button class="btn" onclick="formatHTML()"><i class="fas fa-code"></i> Format HTML</button></div>
         <div class="output-label">Formatted Output</div>
         <textarea id="hfOut" class="output-area" readonly style="min-height:200px;font-size:.78rem"></textarea>
         <div class="btn-row"><button class="btn btn-outline" onclick="copyText('hfOut')">Copy</button></div>
@@ -967,7 +996,7 @@ const TOOLS = {
       <div class="tool-box">
         <h3>Input CSS</h3>
         <textarea id="cmIn" placeholder="Paste CSS code here..." style="min-height:200px;font-family:monospace;font-size:.78rem"></textarea>
-        <div class="btn-row"><button class="btn" onclick="minifyCSS()">Minify CSS</button></div>
+        <div class="btn-row"><button class="btn" onclick="minifyCSS()"><i class="fas fa-compress"></i> Minify CSS</button></div>
         <div class="output-label">Minified CSS</div>
         <textarea id="cmOut" class="output-area" readonly style="min-height:100px;font-size:.78rem"></textarea>
         <div class="btn-row"><button class="btn btn-outline" onclick="copyText('cmOut')">Copy</button></div>
@@ -986,7 +1015,7 @@ const TOOLS = {
       <div class="tool-box">
         <h3>Input CSS</h3>
         <textarea id="cbIn" placeholder="Paste minified CSS here..." style="min-height:160px;font-family:monospace;font-size:.78rem"></textarea>
-        <div class="btn-row"><button class="btn" onclick="beautifyCSS()">Beautify CSS</button></div>
+        <div class="btn-row"><button class="btn" onclick="beautifyCSS()"><i class="fas fa-paint-brush"></i> Beautify CSS</button></div>
         <div class="output-label">Formatted CSS</div>
         <textarea id="cbOut" class="output-area" readonly style="min-height:200px;font-size:.78rem"></textarea>
         <div class="btn-row"><button class="btn btn-outline" onclick="copyText('cbOut')">Copy</button></div>
@@ -1005,7 +1034,7 @@ const TOOLS = {
       <div class="tool-box">
         <h3>Input JavaScript</h3>
         <textarea id="jsmIn" placeholder="Paste JavaScript code here..." style="min-height:200px;font-family:monospace;font-size:.78rem"></textarea>
-        <div class="btn-row"><button class="btn" onclick="minifyJS()">Minify JS</button></div>
+        <div class="btn-row"><button class="btn" onclick="minifyJS()"><i class="fas fa-bolt"></i> Minify JS</button></div>
         <div class="output-label">Minified JS</div>
         <textarea id="jsmOut" class="output-area" readonly style="min-height:100px;font-size:.78rem"></textarea>
         <div class="btn-row"><button class="btn btn-outline" onclick="copyText('jsmOut')">Copy</button></div>
@@ -1025,7 +1054,7 @@ const TOOLS = {
       <div class="tool-box">
         <h3>Input URL / Text</h3>
         <textarea id="ueIn" placeholder="Enter URL or text to encode..." style="min-height:100px"></textarea>
-        <div class="btn-row"><button class="btn" onclick="encodeURL()">Encode URL</button></div>
+        <div class="btn-row"><button class="btn" onclick="encodeURL()"><i class="fas fa-link"></i> Encode URL</button></div>
         <div class="output-label">Encoded Output</div>
         <textarea id="ueOut" class="output-area" readonly style="min-height:80px"></textarea>
         <div class="btn-row"><button class="btn btn-outline" onclick="copyText('ueOut')">Copy</button></div>
@@ -1040,7 +1069,7 @@ const TOOLS = {
       <div class="tool-box">
         <h3>Input Encoded URL</h3>
         <textarea id="udIn" placeholder="Enter encoded URL to decode..." style="min-height:100px"></textarea>
-        <div class="btn-row"><button class="btn" onclick="decodeURL()">Decode URL</button></div>
+        <div class="btn-row"><button class="btn" onclick="decodeURL()"><i class="fas fa-unlink"></i> Decode URL</button></div>
         <div class="output-label">Decoded Output</div>
         <textarea id="udOut" class="output-area" readonly style="min-height:80px"></textarea>
         <div class="btn-row"><button class="btn btn-outline" onclick="copyText('udOut')">Copy</button></div>
@@ -1059,7 +1088,7 @@ const TOOLS = {
           <div><label>Percentage (%)</label><input type="number" id="pPct" placeholder="e.g. 25"></div>
           <div><label>Of Number</label><input type="number" id="pNum" placeholder="e.g. 200"></div>
         </div>
-        <div class="btn-row"><button class="btn" onclick="calcPct()">Calculate</button></div>
+        <div class="btn-row"><button class="btn" onclick="calcPct()"><i class="fas fa-calculator"></i> Calculate</button></div>
         <div class="output-label">Result</div>
         <div class="output-area" id="pctOut">Result will appear here</div>
       </div>
@@ -1069,7 +1098,7 @@ const TOOLS = {
           <div><label>Old Value</label><input type="number" id="pcOld" placeholder="e.g. 100"></div>
           <div><label>New Value</label><input type="number" id="pcNew" placeholder="e.g. 125"></div>
         </div>
-        <div class="btn-row"><button class="btn" onclick="calcPctChange()">Calculate Change</button></div>
+        <div class="btn-row"><button class="btn" onclick="calcPctChange()"><i class="fas fa-chart-line"></i> Calculate Change</button></div>
         <div class="output-area" id="pctChOut" style="margin-top:.8rem">Result will appear here</div>
       </div>`,
     init: () => {
@@ -1088,7 +1117,7 @@ const TOOLS = {
           <div><label>Date of Birth</label><input type="date" id="dob" max="${new Date().toISOString().split('T')[0]}"></div>
           <div><label>As of Date</label><input type="date" id="aod" value="${new Date().toISOString().split('T')[0]}"></div>
         </div>
-        <div class="btn-row"><button class="btn" onclick="calcAge()">Calculate Age</button></div>
+        <div class="btn-row"><button class="btn" onclick="calcAge()"><i class="fas fa-birthday-cake"></i> Calculate Age</button></div>
         <div class="stats-row" id="ageResult" style="display:none">
           <div class="stat-box"><div class="stat-val" id="ageYr">0</div><div class="stat-lbl">Years</div></div>
           <div class="stat-box"><div class="stat-val" id="ageMo">0</div><div class="stat-lbl">Months</div></div>
@@ -1122,7 +1151,7 @@ const TOOLS = {
           <div><label>Height (cm)</label><input type="number" id="bmiH" placeholder="e.g. 175"></div>
           <div><label>Weight (kg)</label><input type="number" id="bmiW" placeholder="e.g. 70"></div>
         </div>
-        <div class="btn-row"><button class="btn" onclick="calcBMI()">Calculate BMI</button></div>
+        <div class="btn-row"><button class="btn" onclick="calcBMI()"><i class="fas fa-weight"></i> Calculate BMI</button></div>
         <div id="bmiResult" style="margin-top:1rem"></div>
       </div>`,
     init: () => { window.calcBMI = () => {
@@ -1150,7 +1179,7 @@ const TOOLS = {
           <div><label>Annual Interest Rate (%)</label><input type="number" id="emiR" placeholder="e.g. 8.5" step="0.1"></div>
           <div><label>Loan Tenure (Months)</label><input type="number" id="emiN" placeholder="e.g. 60"></div>
         </div>
-        <div class="btn-row"><button class="btn" onclick="calcEMI()">Calculate EMI</button></div>
+        <div class="btn-row"><button class="btn" onclick="calcEMI()"><i class="fas fa-calculator"></i> <i class="fas fa-money-bill-wave"></i> Calculate EMI</button></div>
         <div id="emiResult" style="margin-top:1rem"></div>
       </div>`,
     init: () => { window.calcEMI = () => {
@@ -1179,7 +1208,7 @@ const TOOLS = {
           </div>
         </div>
         <div class="btn-row">
-          <button class="btn" onclick="calcGST('add')">Add GST</button>
+          <button class="btn" onclick="calcGST('add')"><i class="fas fa-plus"></i> Add GST</button>
           <button class="btn btn-outline" onclick="calcGST('remove')">Remove GST</button>
         </div>
         <div id="gstResult" style="margin-top:1rem"></div>
@@ -1208,7 +1237,7 @@ const TOOLS = {
           <div><label>Original Price</label><input type="number" id="discPrice" placeholder="e.g. 1500"></div>
           <div><label>Discount (%)</label><input type="number" id="discPct" placeholder="e.g. 30"></div>
         </div>
-        <div class="btn-row"><button class="btn" onclick="calcDiscount()">Calculate</button></div>
+        <div class="btn-row"><button class="btn" onclick="calcDiscount()"><i class="fas fa-tags"></i> Calculate</button></div>
         <div id="discResult" style="margin-top:1rem"></div>
       </div>`,
     init: () => { window.calcDiscount = () => {
@@ -1233,7 +1262,7 @@ const TOOLS = {
           <div><label>Minutes</label><input type="number" id="tcM" value="0" min="0" max="59"></div>
           <div><label>Seconds</label><input type="number" id="tcS" value="0" min="0" max="59"></div>
         </div>
-        <div class="btn-row"><button class="btn" onclick="calcTime()">Convert</button></div>
+        <div class="btn-row"><button class="btn" onclick="calcTime()"><i class="fas fa-exchange-alt"></i> Convert</button></div>
         <div id="tcResult" style="margin-top:1rem"></div>
       </div>`,
     init: () => { window.calcTime = () => {
@@ -1257,7 +1286,7 @@ const TOOLS = {
           <div><label>Start Date</label><input type="date" id="ddStart"></div>
           <div><label>End Date</label><input type="date" id="ddEnd"></div>
         </div>
-        <div class="btn-row"><button class="btn" onclick="calcDateDiff()">Calculate Difference</button></div>
+        <div class="btn-row"><button class="btn" onclick="calcDateDiff()"><i class="fas fa-calendar-alt"></i> Calculate Difference</button></div>
         <div id="ddResult" style="margin-top:1rem"></div>
       </div>`,
     init: () => {
@@ -1310,7 +1339,7 @@ const TOOLS = {
       <div class="tool-box">
         <h3>Enter Number</h3>
         <input type="number" id="ntwIn" placeholder="e.g. 12345">
-        <div class="btn-row"><button class="btn" onclick="numToWords()">Convert to Words</button></div>
+        <div class="btn-row"><button class="btn" onclick="numToWords()"><i class="fas fa-spell-check"></i> Convert to Words</button></div>
         <div class="output-label">Result</div>
         <div class="output-area" id="ntwOut">Result will appear here</div>
       </div>`,
@@ -1343,7 +1372,7 @@ const TOOLS = {
         <div class="output-area" id="pgOut" style="font-size:1.1rem;letter-spacing:.08em;text-align:center;padding:1.2rem">Click Generate</div>
         <div id="strengthBar" class="strength-bar"></div>
         <div class="btn-row">
-          <button class="btn" onclick="genPass()">Generate New</button>
+          <button class="btn" onclick="genPass()"><i class="fas fa-bolt"></i> Generate New</button>
           <button class="btn btn-outline" onclick="copyEl('pgOut')">Copy Password</button>
         </div>
       </div>`,
@@ -1384,7 +1413,7 @@ const TOOLS = {
         <div style="margin-top:.8rem"><label>Content</label>
           <input type="text" id="qrContent" placeholder="https://example.com">
         </div>
-        <div class="btn-row"><button class="btn" onclick="generateQR()">Generate QR Code</button></div>
+        <div class="btn-row"><button class="btn" onclick="generateQR()"><i class="fas fa-qrcode"></i> Generate QR Code</button></div>
         <div id="qrResult" style="margin-top:1.5rem;text-align:center"></div>
       </div>`,
     init: () => {
@@ -1430,7 +1459,7 @@ const TOOLS = {
           <div><label>Count</label><input type="number" id="uuidCount" value="5" min="1" max="100"></div>
           <div><label>Version</label><select id="uuidVer"><option value="4">UUID v4 (Random)</option><option value="1">UUID v1 (Time-based)</option></select></div>
         </div>
-        <div class="btn-row"><button class="btn" onclick="generateUUIDs()">Generate UUIDs</button></div>
+        <div class="btn-row"><button class="btn" onclick="generateUUIDs()"><i class="fas fa-bolt"></i> Generate UUIDs</button></div>
         <div class="output-label">Generated UUIDs</div>
         <textarea id="uuidOut" class="output-area" readonly style="min-height:180px;font-size:.78rem"></textarea>
         <div class="btn-row"><button class="btn btn-outline" onclick="copyText('uuidOut')">Copy All</button></div>
@@ -1463,7 +1492,7 @@ const TOOLS = {
           <div><label>Count</label><input type="number" id="rnCount" value="1" min="1" max="1000"></div>
         </div>
         <div style="margin-top:.8rem"><label><input type="checkbox" id="rnUniq" style="width:auto;margin-right:.4rem"> No Duplicates</label></div>
-        <div class="btn-row"><button class="btn" onclick="genRandNums()">Generate</button></div>
+        <div class="btn-row"><button class="btn" onclick="genRandNums()"><i class="fas fa-bolt"></i> Generate</button></div>
         <div class="output-label">Generated Numbers</div>
         <textarea id="rnOut" class="output-area" readonly style="min-height:120px"></textarea>
       </div>`,
@@ -1487,7 +1516,7 @@ const TOOLS = {
         <div class="row2" style="margin-top:1rem">
           <div><label>Pick Count</label><input type="number" id="rnpCount" value="1" min="1"></div>
         </div>
-        <div class="btn-row"><button class="btn" onclick="pickRandName()">🎲 Pick!</button></div>
+        <div class="btn-row"><button class="btn" onclick="pickRandName()"><i class="fas fa-bolt"></i> 🎲 Pick!</button></div>
         <div id="rnpResult" style="margin-top:1.5rem;text-align:center"></div>
       </div>`,
     init: () => { window.pickRandName = () => {
@@ -1579,7 +1608,7 @@ const TOOLS = {
             </select>
           </div>
         </div>
-        <div class="btn-row"><button class="btn" onclick="genPalette()">Generate Palette</button></div>
+        <div class="btn-row"><button class="btn" onclick="genPalette()"><i class="fas fa-bolt"></i> Generate Palette</button></div>
         <div id="paletteResult" style="margin-top:1.5rem;display:flex;gap:.6rem;flex-wrap:wrap"></div>
       </div>`,
     init: () => { window.genPalette = () => {
@@ -1639,7 +1668,7 @@ const TOOLS = {
           </div>
           <div><label>Value</label><input type="text" id="bcVal" placeholder="Enter value"></div>
         </div>
-        <div class="btn-row"><button class="btn" onclick="genBarcode()">Generate</button></div>
+        <div class="btn-row"><button class="btn" onclick="genBarcode()"><i class="fas fa-bolt"></i> Generate</button></div>
         <div id="bcResult" style="margin-top:1.5rem;text-align:center;background:white;border-radius:10px;padding:1rem"></div>
       </div>`,
     init: () => { window.genBarcode = () => {
@@ -1657,7 +1686,7 @@ const TOOLS = {
       <div class="tool-box">
         <h3>Paste Your Content</h3>
         <textarea id="kdText" placeholder="Paste your article or content here..." style="min-height:200px"></textarea>
-        <div class="btn-row"><button class="btn" onclick="checkKeyDensity()">Analyze Keywords</button></div>
+        <div class="btn-row"><button class="btn" onclick="checkKeyDensity()"><i class="fas fa-bolt"></i> Analyze Keywords</button></div>
         <div id="kdResult" style="margin-top:1rem"></div>
       </div>`,
     init: () => { window.checkKeyDensity = () => {
@@ -1681,7 +1710,7 @@ const TOOLS = {
         <div style="margin-top:.8rem"><label>Meta Description</label><textarea id="mtDesc" placeholder="Brief description of your page..." style="min-height:80px" maxlength="160"></textarea></div>
         <div style="margin-top:.8rem"><label>Keywords (comma separated)</label><input type="text" id="mtKw" placeholder="keyword1, keyword2, keyword3"></div>
         <div style="margin-top:.8rem"><label>Author</label><input type="text" id="mtAuth" placeholder="Your name"></div>
-        <div class="btn-row"><button class="btn" onclick="genMetaTags()">Generate Meta Tags</button></div>
+        <div class="btn-row"><button class="btn" onclick="genMetaTags()"><i class="fas fa-bolt"></i> Generate Meta Tags</button></div>
         <div class="output-label">Generated Meta Tags</div>
         <textarea id="mtOut" class="output-area" readonly style="min-height:180px;font-size:.78rem"></textarea>
         <div class="btn-row"><button class="btn btn-outline" onclick="copyText('mtOut')">Copy</button></div>
@@ -1709,7 +1738,7 @@ const TOOLS = {
         <div style="margin-top:.8rem"><label>Allow Paths (one per line)</label>
           <textarea id="rbAllow" placeholder="/public/" style="min-height:60px"></textarea>
         </div>
-        <div class="btn-row"><button class="btn" onclick="genRobots()">Generate robots.txt</button></div>
+        <div class="btn-row"><button class="btn" onclick="genRobots()"><i class="fas fa-bolt"></i> Generate robots.txt</button></div>
         <div class="output-label">robots.txt Content</div>
         <textarea id="rbOut" class="output-area" readonly style="min-height:160px;font-family:monospace;font-size:.82rem"></textarea>
         <div class="btn-row"><button class="btn btn-outline" onclick="copyText('rbOut')">Copy</button></div>
@@ -1732,7 +1761,7 @@ const TOOLS = {
       <div class="tool-box">
         <h3>Paste Text</h3>
         <textarea id="eeText" placeholder="Paste any text containing email addresses..." style="min-height:180px"></textarea>
-        <div class="btn-row"><button class="btn" onclick="extractEmails()">Extract Emails</button></div>
+        <div class="btn-row"><button class="btn" onclick="extractEmails()"><i class="fas fa-bolt"></i> Extract Emails</button></div>
         <div class="output-label">Extracted Emails</div>
         <textarea id="eeOut" class="output-area" readonly style="min-height:140px"></textarea>
         <div id="eeCount" style="font-family:monospace;font-size:.72rem;color:var(--muted);margin-top:.4rem"></div>
@@ -1753,7 +1782,7 @@ const TOOLS = {
       <div class="tool-box">
         <h3>Input HTML</h3>
         <textarea id="htmIn" placeholder="Paste HTML code here..." style="min-height:180px;font-family:monospace;font-size:.8rem"></textarea>
-        <div class="btn-row"><button class="btn" onclick="htmlToMD()">Convert to Markdown</button></div>
+        <div class="btn-row"><button class="btn" onclick="htmlToMD()"><i class="fas fa-exchange-alt"></i> Convert to Markdown</button></div>
         <div class="output-label">Markdown Output</div>
         <textarea id="htmOut" class="output-area" readonly style="min-height:180px"></textarea>
         <div class="btn-row"><button class="btn btn-outline" onclick="copyText('htmOut')">Copy</button></div>
@@ -1781,7 +1810,7 @@ const TOOLS = {
       <div class="tool-box">
         <h3>Input Markdown</h3>
         <textarea id="mthIn" placeholder="# Heading&#10;&#10;**Bold** and *italic*&#10;&#10;- List item" style="min-height:180px;font-family:monospace;font-size:.8rem"></textarea>
-        <div class="btn-row"><button class="btn" onclick="mdToHTML()">Convert to HTML</button></div>
+        <div class="btn-row"><button class="btn" onclick="mdToHTML()"><i class="fas fa-exchange-alt"></i> Convert to HTML</button></div>
         <div class="output-label">HTML Output</div>
         <textarea id="mthOut" class="output-area" readonly style="min-height:180px;font-size:.78rem"></textarea>
         <div class="btn-row"><button class="btn btn-outline" onclick="copyText('mthOut')">Copy HTML</button></div>
@@ -1837,7 +1866,7 @@ const TOOLS = {
           <div><label>Original Code (A)</label><textarea id="cdA" placeholder="Paste original code..." style="min-height:200px;font-family:monospace;font-size:.78rem"></textarea></div>
           <div><label>Modified Code (B)</label><textarea id="cdB" placeholder="Paste modified code..." style="min-height:200px;font-family:monospace;font-size:.78rem"></textarea></div>
         </div>
-        <div class="btn-row"><button class="btn" onclick="diffCode()">Compare</button></div>
+        <div class="btn-row"><button class="btn" onclick="diffCode()"><i class="fas fa-bolt"></i> Compare</button></div>
         <div class="output-label">Differences</div>
         <div id="cdResult" class="output-area" style="min-height:150px;font-family:monospace;font-size:.78rem">Click Compare to see differences</div>
       </div>`,
@@ -1862,7 +1891,7 @@ const TOOLS = {
       <div class="tool-box">
         <h3>Enter Your Text</h3>
         <textarea id="gcText" placeholder="Paste your text here to check grammar..." style="min-height:200px"></textarea>
-        <div class="btn-row"><button class="btn" onclick="checkGrammar()">Check Grammar</button></div>
+        <div class="btn-row"><button class="btn" onclick="checkGrammar()"><i class="fas fa-search"></i> Check Grammar</button></div>
         <div id="gcResult" style="margin-top:1rem"></div>
         <div class="notice" style="margin-top:1rem">ℹ️ <strong>Note:</strong> This is a basic grammar checker. For advanced AI-powered checking, consider Grammarly or LanguageTool.</div>
       </div>`,
@@ -1893,7 +1922,7 @@ const TOOLS = {
       <div class="tool-box">
         <h3>Paste Text to Analyze</h3>
         <textarea id="aiText" placeholder="Paste the text you want to analyze for AI content..." style="min-height:200px"></textarea>
-        <div class="btn-row"><button class="btn" onclick="detectAI()">Analyze Text</button></div>
+        <div class="btn-row"><button class="btn" onclick="detectAI()"><i class="fas fa-bolt"></i> Analyze Text</button></div>
         <div id="aiResult" style="margin-top:1rem"></div>
         <div class="notice" style="margin-top:1rem">⚠️ <strong>Disclaimer:</strong> AI detection is not 100% accurate. Results are indicative only.</div>
       </div>`,
@@ -1926,7 +1955,7 @@ const TOOLS = {
       <div class="tool-box">
         <h3>Enter Your Text</h3>
         <textarea id="plText" placeholder="Paste your text to check for plagiarism..." style="min-height:200px"></textarea>
-        <div class="btn-row"><button class="btn" onclick="checkPlagiarism()">Check Plagiarism</button></div>
+        <div class="btn-row"><button class="btn" onclick="checkPlagiarism()"><i class="fas fa-search"></i> Check Plagiarism</button></div>
         <div id="plResult" style="margin-top:1rem"></div>
         <div class="notice" style="margin-top:1rem">🔗 <strong>Full plagiarism checking</strong> requires access to web indices. This tool provides a basic uniqueness score based on common phrases.</div>
       </div>`,
@@ -1987,31 +2016,304 @@ const TOOLS = {
     render: () => fileUploadTool('Screenshot to PDF', '📸→📄', 'image/*', 'Convert to PDF', 'Selected images will be combined into a PDF', true)
   },
 
-  // ── WEBSITE TOOLS (showing as "coming soon" with explanation)
-  'website-screenshot': { title:'Website Screenshot Tool', cat:'Website Tools', catLink:'#website-tools', desc:'Capture a full-page screenshot of any website by URL.', render: () => serverSideTool('Website Screenshot', '🖥️', 'Enter Website URL', 'https://example.com', 'url', 'Take Screenshot') },
-  'website-down-checker': { title:'Website Down Checker', cat:'Website Tools', catLink:'#website-tools', desc:'Check if a website is down for everyone or just for you.', render: () => serverSideTool('Website Down Checker', '🔍', 'Enter Website URL', 'https://example.com', 'url', 'Check Status') },
-  'dns-lookup': { title:'DNS Lookup Tool', cat:'Website Tools', catLink:'#website-tools', desc:'Query DNS records for any domain name.', render: () => serverSideTool('DNS Lookup', '🌐', 'Enter Domain Name', 'example.com', 'text', 'Lookup DNS') },
-  'ip-lookup': { title:'IP Lookup Tool', cat:'Website Tools', catLink:'#website-tools', desc:'Look up geographic location and ISP info for any IP address.', render: () => serverSideTool('IP Lookup', '📍', 'Enter IP Address', '8.8.8.8', 'text', 'Lookup IP') },
-  'hosting-checker': { title:'Hosting Checker', cat:'Website Tools', catLink:'#website-tools', desc:'Find out which hosting provider any website is using.', render: () => serverSideTool('Hosting Checker', '🖥️', 'Enter Domain', 'example.com', 'text', 'Check Hosting') },
-  'ssl-checker': { title:'SSL Checker', cat:'Website Tools', catLink:'#website-tools', desc:'Verify SSL certificate validity, issuer, and expiration date.', render: () => serverSideTool('SSL Checker', '🔒', 'Enter Domain', 'example.com', 'text', 'Check SSL') },
-  'whois': { title:'Whois Domain Lookup', cat:'Website Tools', catLink:'#website-tools', desc:'Find domain registration, owner, expiry and registrar information.', render: () => serverSideTool('Whois Lookup', '👤', 'Enter Domain', 'example.com', 'text', 'Lookup WHOIS') },
-  'redirect-checker': { title:'Redirect Checker', cat:'Website Tools', catLink:'#website-tools', desc:'Trace full redirect chains (301, 302, 307) for any URL.', render: () => serverSideTool('Redirect Checker', '🔀', 'Enter URL', 'https://example.com', 'url', 'Check Redirects') },
-  'http-header': { title:'HTTP Header Checker', cat:'Website Tools', catLink:'#website-tools', desc:'Inspect HTTP response headers returned by any web server.', render: () => serverSideTool('HTTP Header Checker', '📋', 'Enter URL', 'https://example.com', 'url', 'Check Headers') },
-  'mobile-friendly': { title:'Mobile Friendly Test', cat:'Website Tools', catLink:'#website-tools', desc:'Check if a website is optimized for mobile devices.', render: () => serverSideTool('Mobile Friendly Test', '📱', 'Enter URL', 'https://example.com', 'url', 'Test Mobile') },
+  // ── WEBSITE TOOLS (real free APIs — no backend needed)
+  'website-screenshot': {
+    title:'Website Screenshot Tool', cat:'Website Tools', catLink:'#website-tools',
+    desc:'Capture a full-page screenshot of any website using a free API.',
+    render: () => `<div class="tool-box"><h3>Enter Website URL</h3><input type="url" id="ssUrl" placeholder="https://example.com"><div class="btn-row"><button class="btn" onclick="takeScreenshot()"><i class="fas fa-bolt"></i> 📸 Take Screenshot</button></div><div id="ssResult" style="margin-top:1.2rem;text-align:center"></div></div>`,
+    init: () => { window.takeScreenshot=()=>{ const url=document.getElementById('ssUrl').value.trim(); if(!url){alert('Enter a URL');return;} const res=document.getElementById('ssResult'); res.innerHTML='<div class="notice">⏳ Capturing screenshot...</div>'; const apiUrl=`https://api.apiflash.com/v1/urltoimage?access_key=free&url=${encodeURIComponent(url)}&width=1280&height=800&format=jpeg`; const img=document.createElement('img'); img.onload=()=>{ res.innerHTML=`<img src="${apiUrl}" style="max-width:100%;border-radius:10px;border:2px solid var(--border2)"><div class="btn-row" style="justify-content:center;margin-top:1rem"><a href="${apiUrl}" download="screenshot.jpg" class="btn" target="_blank">Download Screenshot</a></div>`; }; img.onerror=()=>{ const altUrl=`https://image.thum.io/get/width/1280/${encodeURIComponent(url)}`; res.innerHTML=`<img src="${altUrl}" style="max-width:100%;border-radius:10px;border:2px solid var(--border2)" onerror="this.parentElement.innerHTML='<div class=notice>❌ Could not capture. Try <a href=https://www.screenshotmachine.com target=_blank style=color:var(--accent)>ScreenshotMachine</a></div>'"><div class="btn-row" style="justify-content:center;margin-top:1rem"><a href="${altUrl}" target="_blank" class="btn">View Screenshot</a></div>`; }; img.src=apiUrl; }; }
+  },
+  'website-down-checker': {
+    title:'Website Down Checker', cat:'Website Tools', catLink:'#website-tools',
+    desc:'Check if a website is down for everyone or just for you.',
+    render: () => `<div class="tool-box"><h3>Enter Website URL</h3><input type="url" id="wdcUrl" placeholder="https://example.com"><div class="btn-row"><button class="btn" onclick="checkDown()"><i class="fas fa-search"></i> 🔍 Check Status</button></div><div id="wdcResult" style="margin-top:1rem"></div></div>`,
+    init: () => { window.checkDown=async()=>{ const url=document.getElementById('wdcUrl').value.trim(); if(!url){alert('Enter a URL');return;} const res=document.getElementById('wdcResult'); res.innerHTML='<div class="notice">⏳ Checking...</div>'; try{ const domain=new URL(url).hostname; const r=await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`); if(r.ok){res.innerHTML=`<div class="notice" style="border-color:#68D391;color:#68D391">✅ <strong>${domain}</strong> is UP and accessible!</div>`;}else{res.innerHTML=`<div class="notice" style="border-color:#FC8181;color:#FC8181">❌ <strong>${domain}</strong> seems to be DOWN or unreachable.</div>`;} }catch(e){ res.innerHTML=`<div class="notice" style="border-color:#FC8181;color:#FC8181">❌ Could not reach the server. It may be down.<br><small>Also check: <a href="https://downforeveryoneorjustme.com/${document.getElementById('wdcUrl').value}" target="_blank" style="color:var(--accent)">downforeveryoneorjustme.com</a></small></div>`; } }; }
+  },
+  'dns-lookup': {
+    title:'DNS Lookup Tool', cat:'Website Tools', catLink:'#website-tools',
+    desc:'Query DNS records for any domain — uses Google DNS API.',
+    render: () => `<div class="tool-box"><h3>Enter Domain Name</h3><input type="text" id="dnsIn" placeholder="example.com"><div class="row2" style="margin-top:.8rem"><div><label>Record Type</label><select id="dnsType"><option>A</option><option>AAAA</option><option>MX</option><option>NS</option><option>TXT</option><option>CNAME</option><option>SOA</option></select></div></div><div class="btn-row"><button class="btn" onclick="dnsLookup()"><i class="fas fa-bolt"></i> 🌐 Lookup DNS</button></div><div id="dnsResult" style="margin-top:1rem"></div></div>`,
+    init: () => { window.dnsLookup=async()=>{ const domain=document.getElementById('dnsIn').value.trim().replace(/^https?:\/\//,''); if(!domain){alert('Enter a domain');return;} const type=document.getElementById('dnsType').value; const res=document.getElementById('dnsResult'); res.innerHTML='<div class="notice">⏳ Querying DNS...</div>'; try{ const r=await fetch(`https://dns.google/resolve?name=${domain}&type=${type}`); const d=await r.json(); if(d.Answer&&d.Answer.length){ res.innerHTML=`<div class="notice">✅ DNS Records for <strong>${domain}</strong> (${type})</div><div style="margin-top:.8rem;background:var(--surface2);border-radius:8px;padding:1rem">${d.Answer.map(a=>`<div style="font-family:monospace;font-size:.78rem;padding:.3rem 0;border-bottom:1px solid var(--border);color:var(--text-dim)"><span style="color:var(--accent)">${type}</span> → ${a.data} <span style="color:var(--muted);font-size:.7rem">TTL:${a.TTL}</span></div>`).join('')}</div>`; }else{ res.innerHTML=`<div class="notice">⚠️ No ${type} records found for <strong>${domain}</strong>.</div>`; } }catch(e){ res.innerHTML=`<div class="notice">❌ DNS query failed: ${e.message}</div>`; } }; }
+  },
+  'ip-lookup': {
+    title:'IP Lookup Tool', cat:'Website Tools', catLink:'#website-tools',
+    desc:'Find location, ISP, timezone and org for any IP address — free API.',
+    render: () => `<div class="tool-box"><h3>Enter IP Address</h3><input type="text" id="ipIn" placeholder="8.8.8.8 or leave blank for your IP"><div class="btn-row"><button class="btn" onclick="ipLookup()"><i class="fas fa-bolt"></i> 📍 Lookup IP</button><button class="btn btn-outline" onclick="document.getElementById('ipIn').value='';ipLookup()">My IP</button></div><div id="ipResult" style="margin-top:1rem"></div></div>`,
+    init: () => { window.ipLookup=async()=>{ const ip=document.getElementById('ipIn').value.trim(); const res=document.getElementById('ipResult'); res.innerHTML='<div class="notice">⏳ Looking up...</div>'; try{ const url=ip?`https://ip-api.com/json/${ip}`:'https://ip-api.com/json/'; const r=await fetch(url); const d=await r.json(); if(d.status==='success'){ res.innerHTML=`<div class="stats-row" style="flex-wrap:wrap;gap:.5rem">${[['🌍 IP',d.query],['📍 Country',d.country],['🏙️ City',d.city],['🏢 ISP',d.isp],['🔌 Org',d.org],['🕐 Timezone',d.timezone],['📮 ZIP',d.zip||'—'],['🌐 Region',d.regionName]].map(([l,v])=>`<div class="stat-box" style="flex:1;min-width:140px"><div class="stat-val" style="font-size:.85rem">${v||'—'}</div><div class="stat-lbl">${l}</div></div>`).join('')}</div>`; }else{ res.innerHTML=`<div class="notice">❌ ${d.message||'IP not found'}</div>`; } }catch(e){ res.innerHTML=`<div class="notice">❌ ${e.message}</div>`; } }; }
+  },
+  'hosting-checker': {
+    title:'Hosting Checker', cat:'Website Tools', catLink:'#website-tools',
+    desc:'Find hosting provider and server info for any domain via DNS.',
+    render: () => `<div class="tool-box"><h3>Enter Domain Name</h3><input type="text" id="hcIn" placeholder="example.com"><div class="btn-row"><button class="btn" onclick="checkHosting()"><i class="fas fa-search"></i> 🖥️ Check Hosting</button></div><div id="hcResult" style="margin-top:1rem"></div></div>`,
+    init: () => { window.checkHosting=async()=>{ const domain=document.getElementById('hcIn').value.trim().replace(/^https?:\/\//,''); if(!domain){alert('Enter a domain');return;} const res=document.getElementById('hcResult'); res.innerHTML='<div class="notice">⏳ Looking up server info...</div>'; try{ const [aRec,nsRec]=await Promise.all([ fetch(`https://dns.google/resolve?name=${domain}&type=A`).then(r=>r.json()), fetch(`https://dns.google/resolve?name=${domain}&type=NS`).then(r=>r.json()) ]); const ip=aRec.Answer?.[0]?.data||'Not found'; const ns=nsRec.Authority?.map(n=>n.data)||nsRec.Answer?.map(n=>n.data)||[]; const ipR=await fetch(`https://ip-api.com/json/${ip}`).then(r=>r.json()); const hosting=detectHosting(ns.join(','),ipR.org||'',ipR.isp||''); res.innerHTML=`<div class="stats-row" style="flex-wrap:wrap;gap:.5rem">${[['🏢 Host/Org',ipR.org||'Unknown'],['🌍 Server IP',ip],['📍 Location',`${ipR.city||''}, ${ipR.country||''}`],['🔌 ISP',ipR.isp||'Unknown'],['🌐 Name Servers',ns.slice(0,2).join(', ')||'Unknown'],['💡 Detected Host',hosting]].map(([l,v])=>`<div class="stat-box" style="flex:1;min-width:140px"><div class="stat-val" style="font-size:.78rem">${v}</div><div class="stat-lbl">${l}</div></div>`).join('')}</div>`; }catch(e){ res.innerHTML=`<div class="notice">❌ ${e.message}</div>`; } }; window.detectHosting=(ns,org,isp)=>{ const all=(ns+org+isp).toLowerCase(); if(all.includes('cloudflare'))return'Cloudflare'; if(all.includes('amazonaws')||all.includes('aws'))return'Amazon AWS'; if(all.includes('google'))return'Google Cloud'; if(all.includes('azure')||all.includes('microsoft'))return'Microsoft Azure'; if(all.includes('godaddy'))return'GoDaddy'; if(all.includes('bluehost'))return'Bluehost'; if(all.includes('siteground'))return'SiteGround'; if(all.includes('digitalocean'))return'DigitalOcean'; if(all.includes('hostinger'))return'Hostinger'; if(all.includes('namecheap'))return'Namecheap'; return org||'Unknown'; }; }
+  },
+  'ssl-checker': {
+    title:'SSL Checker', cat:'Website Tools', catLink:'#website-tools',
+    desc:'Check SSL certificate status and HTTPS security for any domain.',
+    render: () => `<div class="tool-box"><h3>Enter Domain Name</h3><input type="text" id="sslIn" placeholder="example.com"><div class="btn-row"><button class="btn" onclick="checkSSL()"><i class="fas fa-search"></i> 🔒 Check SSL</button></div><div id="sslResult" style="margin-top:1rem"></div></div>`,
+    init: () => { window.checkSSL=async()=>{ const domain=document.getElementById('sslIn').value.trim().replace(/^https?:\/\//,''); if(!domain){alert('Enter a domain');return;} const res=document.getElementById('sslResult'); res.innerHTML='<div class="notice">⏳ Checking SSL...</div>'; try{ const r=await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://'+domain)}`); const d=await r.json(); if(d.status?.http_code>=200){ res.innerHTML=`<div class="stats-row" style="flex-wrap:wrap;gap:.5rem"><div class="stat-box" style="flex:1;min-width:140px"><div class="stat-val" style="color:#68D391">✅ Valid</div><div class="stat-lbl">SSL Status</div></div><div class="stat-box" style="flex:1;min-width:140px"><div class="stat-val">HTTPS</div><div class="stat-lbl">Protocol</div></div><div class="stat-box" style="flex:1;min-width:140px"><div class="stat-val">${d.status.http_code}</div><div class="stat-lbl">HTTP Status</div></div></div><div class="notice" style="margin-top:.8rem">✅ <strong>${domain}</strong> has a valid SSL certificate and is accessible over HTTPS. For full cert details (expiry, issuer), use <a href="https://www.ssllabs.com/ssltest/analyze.html?d=${domain}" target="_blank" style="color:var(--accent)">SSL Labs</a>.</div>`; }else{ res.innerHTML=`<div class="notice" style="border-color:#FC8181;color:#FC8181">❌ SSL issue detected for <strong>${domain}</strong>. Check with <a href="https://www.ssllabs.com/ssltest/analyze.html?d=${domain}" target="_blank" style="color:var(--accent)">SSL Labs</a>.</div>`; } }catch(e){ res.innerHTML=`<div class="notice">⚠️ Could not reach ${domain}. SSL may be invalid or site is down.<br><a href="https://www.ssllabs.com/ssltest/analyze.html?d=${domain}" target="_blank" style="color:var(--accent)">→ Check on SSL Labs</a></div>`; } }; }
+  },
+  'whois': {
+    title:'Whois Domain Lookup', cat:'Website Tools', catLink:'#website-tools',
+    desc:'Find domain registration, owner, and registrar using RDAP.',
+    render: () => `<div class="tool-box"><h3>Enter Domain Name</h3><input type="text" id="whoisIn" placeholder="example.com"><div class="btn-row"><button class="btn" onclick="whoisLookup()"><i class="fas fa-bolt"></i> 👤 Lookup WHOIS</button></div><div id="whoisResult" style="margin-top:1rem"></div></div>`,
+    init: () => { window.whoisLookup=async()=>{ const domain=document.getElementById('whoisIn').value.trim().replace(/^https?:\/\//,'').toLowerCase(); if(!domain){alert('Enter a domain');return;} const res=document.getElementById('whoisResult'); res.innerHTML='<div class="notice">⏳ Querying RDAP...</div>'; try{ const r=await fetch(`https://rdap.org/domain/${domain}`); const d=await r.json(); const created=d.events?.find(e=>e.eventAction==='registration')?.eventDate?.split('T')[0]||'Unknown'; const updated=d.events?.find(e=>e.eventAction==='last changed')?.eventDate?.split('T')[0]||'Unknown'; const expiry=d.events?.find(e=>e.eventAction==='expiration')?.eventDate?.split('T')[0]||'Unknown'; const registrar=d.entities?.find(e=>e.roles?.includes('registrar'))?.vcardArray?.[1]?.find(v=>v[0]==='fn')?.[3]||'Unknown'; const status=Array.isArray(d.status)?d.status.join(', '):'Unknown'; res.innerHTML=`<div class="stats-row" style="flex-wrap:wrap;gap:.5rem">${[['🌐 Domain',d.ldhName||domain],['🏢 Registrar',registrar],['📅 Registered',created],['🔄 Updated',updated],['⏰ Expires',expiry],['📋 Status',status]].map(([l,v])=>`<div class="stat-box" style="flex:1;min-width:140px"><div class="stat-val" style="font-size:.78rem">${v}</div><div class="stat-lbl">${l}</div></div>`).join('')}</div>`; }catch(e){ res.innerHTML=`<div class="notice">⚠️ RDAP query failed. Try <a href="https://lookup.icann.org/en/lookup?name=${domain}" target="_blank" style="color:var(--accent)">ICANN Lookup</a> for full WHOIS data.</div>`; } }; }
+  },
+  'redirect-checker': {
+    title:'Redirect Checker', cat:'Website Tools', catLink:'#website-tools',
+    desc:'Trace HTTP redirect chains for any URL using a proxy API.',
+    render: () => `<div class="tool-box"><h3>Enter URL</h3><input type="url" id="rdirIn" placeholder="https://example.com"><div class="btn-row"><button class="btn" onclick="checkRedirects()"><i class="fas fa-search"></i> 🔀 Check Redirects</button></div><div id="rdirResult" style="margin-top:1rem"></div></div>`,
+    init: () => { window.checkRedirects=async()=>{ const url=document.getElementById('rdirIn').value.trim(); if(!url){alert('Enter a URL');return;} const res=document.getElementById('rdirResult'); res.innerHTML='<div class="notice">⏳ Following redirects...</div>'; try{ const r=await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`); const d=await r.json(); const finalUrl=d.status?.url||url; const code=d.status?.http_code||200; const isRedirected=finalUrl!==url; res.innerHTML=`<div class="notice" style="border-color:${isRedirected?'var(--accent)':'#68D391'}"><strong>Start:</strong> ${url}<br>${isRedirected?`<strong>→ Redirected to:</strong> ${finalUrl}<br>`:''}<strong>Final Status:</strong> ${code} ${code===200?'✅ OK':code>=300?'🔀 Redirect':'⚠️'}</div><div class="notice" style="margin-top:.5rem">For full chain (301→302→...) use <a href="https://httpstatus.io/?url=${encodeURIComponent(url)}" target="_blank" style="color:var(--accent)">httpstatus.io</a></div>`; }catch(e){ res.innerHTML=`<div class="notice">❌ Could not fetch. Try <a href="https://httpstatus.io/?url=${encodeURIComponent(url)}" target="_blank" style="color:var(--accent)">httpstatus.io</a></div>`; } }; }
+  },
+  'http-header': {
+    title:'HTTP Header Checker', cat:'Website Tools', catLink:'#website-tools',
+    desc:'Inspect HTTP response headers for any URL via proxy.',
+    render: () => `<div class="tool-box"><h3>Enter URL</h3><input type="url" id="hhIn" placeholder="https://example.com"><div class="btn-row"><button class="btn" onclick="checkHeaders()"><i class="fas fa-search"></i> 📋 Check Headers</button></div><div id="hhResult" style="margin-top:1rem"></div></div>`,
+    init: () => { window.checkHeaders=async()=>{ const url=document.getElementById('hhIn').value.trim(); if(!url){alert('Enter a URL');return;} const res=document.getElementById('hhResult'); res.innerHTML='<div class="notice">⏳ Fetching headers...</div>'; try{ const r=await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`); const d=await r.json(); const code=d.status?.http_code||'?'; const ct=d.status?.content_type||'Unknown'; const size=d.contents?.length?`${(d.contents.length/1024).toFixed(1)} KB`:'Unknown'; res.innerHTML=`<div class="notice">✅ Headers for <strong>${url}</strong></div><div style="margin-top:.8rem;background:var(--surface2);border-radius:8px;padding:1rem;font-family:monospace;font-size:.75rem">${[['HTTP Status',code],['Content-Type',ct],['Content-Length',size],['URL',url]].map(([k,v])=>`<div style="padding:.3rem 0;border-bottom:1px solid var(--border);color:var(--text-dim)"><span style="color:var(--accent)">${k}:</span> ${v}</div>`).join('')}</div><div class="notice" style="margin-top:.5rem">For full headers, use <a href="https://headers.cloxy.net/?url=${encodeURIComponent(url)}" target="_blank" style="color:var(--accent)">headers.cloxy.net</a></div>`; }catch(e){ res.innerHTML=`<div class="notice">❌ ${e.message}</div>`; } }; }
+  },
+  'mobile-friendly': {
+    title:'Mobile Friendly Test', cat:'Website Tools', catLink:'#website-tools',
+    desc:'Preview how your website looks on different mobile screen sizes.',
+    render: () => `<div class="tool-box"><h3>Enter Website URL</h3><input type="url" id="mfUrl" placeholder="https://example.com"><div class="btn-row"><button class="btn" onclick="testMobile()"><i class="fas fa-bolt"></i> 📱 Preview Mobile</button></div><div id="mfResult" style="margin-top:1rem"></div></div>`,
+    init: () => { window.testMobile=()=>{ const url=document.getElementById('mfUrl').value.trim(); if(!url){alert('Enter a URL');return;} const res=document.getElementById('mfResult'); res.innerHTML=`<div class="notice" style="margin-bottom:.8rem">📱 Mobile Preview for <strong>${url}</strong> (375×667 iPhone)</div><div style="display:flex;gap:1rem;flex-wrap:wrap"><div style="border:8px solid var(--border2);border-radius:24px;overflow:hidden;width:200px;height:355px;flex-shrink:0"><iframe src="${url}" style="width:375px;height:667px;transform:scale(0.533);transform-origin:0 0;border:none" sandbox="allow-scripts allow-same-origin"></iframe></div><div style="border:8px solid var(--border2);border-radius:12px;overflow:hidden;flex:1;min-width:260px;height:280px"><iframe src="${url}" style="width:768px;height:100%;transform:scale(0.43);transform-origin:0 0;border:none" sandbox="allow-scripts allow-same-origin"></iframe></div></div><div class="notice" style="margin-top:.8rem">For advanced testing: <a href="https://search.google.com/test/mobile-friendly?url=${encodeURIComponent(url)}" target="_blank" style="color:var(--accent)">Google Mobile Test</a></div>`; }; }
+  },
 
-  // ── SEO (remaining)
-  'meta-tag-analyzer': { title:'Meta Tag Analyzer', cat:'SEO Tools', catLink:'#seo-tools', desc:'Fetch and analyze any website\'s meta tags for SEO compliance.', render: () => serverSideTool('Meta Tag Analyzer','🔍','Enter Website URL','https://example.com','url','Analyze Meta Tags') },
-  'sitemap-generator': { title:'Sitemap Generator', cat:'SEO Tools', catLink:'#seo-tools', desc:'Generate an XML sitemap to help Google index all your pages.', render: () => serverSideTool('Sitemap Generator','🗺️','Enter Website URL','https://example.com','url','Generate Sitemap') },
-  'google-index-checker': { title:'Google Index Checker', cat:'SEO Tools', catLink:'#seo-tools', desc:'Check if a URL is currently indexed by Google.', render: () => serverSideTool('Google Index Checker','🔍','Enter URL','https://example.com/page','url','Check Index') },
-  'domain-authority': { title:'Domain Authority Checker', cat:'SEO Tools', catLink:'#seo-tools', desc:'Check the DA score of any domain.', render: () => serverSideTool('Domain Authority Checker','📊','Enter Domain','example.com','text','Check DA') },
-  'backlink-checker': { title:'Backlink Checker', cat:'SEO Tools', catLink:'#seo-tools', desc:'Find and analyze backlinks pointing to any website.', render: () => serverSideTool('Backlink Checker','🔗','Enter URL','https://example.com','url','Check Backlinks') },
-  'keyword-position': { title:'Keyword Position Checker', cat:'SEO Tools', catLink:'#seo-tools', desc:'Track where your website ranks for specific keywords.', render: () => serverSideTool('Keyword Position','📍','Enter Domain','example.com','text','Check Position') },
-  'page-speed': { title:'Page Speed Checker', cat:'SEO Tools', catLink:'#seo-tools', desc:'Test website loading speed and Core Web Vitals.', render: () => serverSideTool('Page Speed Checker','⚡','Enter URL','https://example.com','url','Check Speed') },
+  // ── SEO TOOLS (real implementations)
+  'meta-tag-analyzer': {
+    title:'Meta Tag Analyzer', cat:'SEO Tools', catLink:'#seo-tools',
+    desc:'Fetch and analyze any website\'s meta tags for SEO using a proxy API.',
+    render: () => `<div class="tool-box"><h3>Enter Website URL</h3><input type="url" id="mtaUrl" placeholder="https://example.com"><div class="btn-row"><button class="btn" onclick="analyzeMeta()"><i class="fas fa-bolt"></i> 🔍 Analyze Meta Tags</button></div><div id="mtaResult" style="margin-top:1rem"></div></div>`,
+    init: () => { window.analyzeMeta=async()=>{ const url=document.getElementById('mtaUrl').value.trim(); if(!url){alert('Enter a URL');return;} const res=document.getElementById('mtaResult'); res.innerHTML='<div class="notice">⏳ Fetching page...</div>'; try{ const r=await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`); const d=await r.json(); const parser=new DOMParser(); const doc=parser.parseFromString(d.contents,'text/html'); const getMeta=name=>doc.querySelector(`meta[name="${name}"]`)?.content||doc.querySelector(`meta[property="og:${name}"]`)?.content||'—'; const title=doc.querySelector('title')?.textContent||'—'; const desc=getMeta('description'); const ogTitle=doc.querySelector('meta[property="og:title"]')?.content||'—'; const ogImg=doc.querySelector('meta[property="og:image"]')?.content||'—'; const canonical=doc.querySelector('link[rel="canonical"]')?.href||'—'; const robots=getMeta('robots'); const viewport=doc.querySelector('meta[name="viewport"]')?.content||'—'; const titleLen=title.length; const descLen=desc.length; res.innerHTML=`<div class="notice">✅ Meta tags for <strong>${url}</strong></div><div style="margin-top:.8rem;display:flex;flex-direction:column;gap:.5rem">${[['📝 Title',title,`${titleLen} chars ${titleLen<50?'⚠️ Too short':titleLen>60?'⚠️ Too long':'✅'}`],['📄 Description',desc,`${descLen} chars ${descLen<120?'⚠️ Too short':descLen>160?'⚠️ Too long':'✅'}`],['🔗 Canonical',canonical,''],['🤖 Robots',robots,''],['📱 Viewport',viewport,''],['🖼️ OG Title',ogTitle,''],['🖼️ OG Image',ogImg,'']].map(([l,v,note])=>`<div style="background:var(--surface2);border-radius:8px;padding:.7rem 1rem"><div style="font-family:monospace;font-size:.65rem;color:var(--accent);text-transform:uppercase;margin-bottom:.2rem">${l} ${note?`<span style="color:var(--text-dim)">${note}</span>`:''}</div><div style="font-size:.8rem;color:var(--text-dim);word-break:break-all">${v}</div></div>`).join('')}</div>`; }catch(e){ res.innerHTML=`<div class="notice">❌ Could not fetch page. CORS may be blocking it.</div>`; } }; }
+  },
+  'sitemap-generator': {
+    title:'Sitemap Generator', cat:'SEO Tools', catLink:'#seo-tools',
+    desc:'Generate an XML sitemap manually by entering your page URLs.',
+    render: () => `<div class="tool-box"><h3>Your Website Pages</h3><textarea id="smUrls" placeholder="https://example.com/&#10;https://example.com/about&#10;https://example.com/contact&#10;https://example.com/blog" style="min-height:160px"></textarea><div class="row2" style="margin-top:.8rem"><div><label>Change Frequency</label><select id="smFreq"><option>weekly</option><option>daily</option><option>monthly</option><option>yearly</option><option>always</option><option>never</option></select></div><div><label>Priority</label><select id="smPri"><option value="0.8">0.8 (High)</option><option value="0.5" selected>0.5 (Medium)</option><option value="0.3">0.3 (Low)</option><option value="1.0">1.0 (Homepage)</option></select></div></div><div class="btn-row"><button class="btn" onclick="generateSitemap()"><i class="fas fa-bolt"></i> 🗺️ Generate Sitemap</button></div><div class="output-label">Generated sitemap.xml</div><textarea id="smOut" class="output-area" readonly style="min-height:200px;font-family:monospace;font-size:.72rem"></textarea><div class="btn-row"><button class="btn btn-outline" onclick="copyText('smOut')">Copy XML</button><button class="btn btn-outline" onclick="downloadSitemap()">Download sitemap.xml</button></div></div>`,
+    init: () => { window.generateSitemap=()=>{ const urls=document.getElementById('smUrls').value.trim().split('\n').filter(u=>u.trim()); if(!urls.length){alert('Enter at least one URL');return;} const freq=document.getElementById('smFreq').value; const pri=document.getElementById('smPri').value; const today=new Date().toISOString().split('T')[0]; const xml=`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u,i)=>`  <url>\n    <loc>${u.trim()}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>${freq}</changefreq>\n    <priority>${i===0?'1.0':pri}</priority>\n  </url>`).join('\n')}\n</urlset>`; document.getElementById('smOut').value=xml; }; window.downloadSitemap=()=>{ const t=document.getElementById('smOut').value; if(!t.trim()){alert('Generate sitemap first');return;} const blob=new Blob([t],{type:'application/xml'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='sitemap.xml'; a.click(); }; }
+  },
+  'google-index-checker': {
+    title:'Google Index Checker', cat:'SEO Tools', catLink:'#seo-tools',
+    desc:'Check if a URL appears in Google Search results.',
+    render: () => `<div class="tool-box"><h3>Enter URL to Check</h3><input type="url" id="gicUrl" placeholder="https://example.com/page"><div class="btn-row"><button class="btn" onclick="checkGoogleIndex()"><i class="fas fa-search"></i> 🔍 Check Index Status</button></div><div id="gicResult" style="margin-top:1rem"></div></div>`,
+    init: () => { window.checkGoogleIndex=()=>{ const url=document.getElementById('gicUrl').value.trim(); if(!url){alert('Enter a URL');return;} const res=document.getElementById('gicResult'); const searchUrl=`https://www.google.com/search?q=site:${encodeURIComponent(url)}`; res.innerHTML=`<div class="notice">ℹ️ Google blocks direct API access, but you can verify manually:<br><br><a href="${searchUrl}" target="_blank" class="btn" style="display:inline-flex">🔍 Check on Google (site:${url})</a><br><br>If results appear = ✅ Indexed<br>If "No results found" = ❌ Not indexed yet</div>`; }; }
+  },
+  'domain-authority': {
+    title:'Domain Authority Checker', cat:'SEO Tools', catLink:'#seo-tools',
+    desc:'Estimate domain authority based on age, DNS and web presence.',
+    render: () => `<div class="tool-box"><h3>Enter Domain</h3><input type="text" id="daIn" placeholder="example.com"><div class="btn-row"><button class="btn" onclick="checkDA()"><i class="fas fa-search"></i> 📊 Check Domain Info</button></div><div id="daResult" style="margin-top:1rem"></div><div class="notice" style="margin-top:.8rem">ℹ️ Official DA score (by Moz) requires a paid API. This shows free domain health info. For real DA use <a href="https://moz.com/domain-analysis" target="_blank" style="color:var(--accent)">Moz</a> or <a href="https://ahrefs.com/website-authority-checker" target="_blank" style="color:var(--accent)">Ahrefs</a>.</div></div>`,
+    init: () => { window.checkDA=async()=>{ const domain=document.getElementById('daIn').value.trim().replace(/^https?:\/\//,''); if(!domain){alert('Enter a domain');return;} const res=document.getElementById('daResult'); res.innerHTML='<div class="notice">⏳ Checking domain info...</div>'; try{ const [rdap,dns,ip]=await Promise.all([ fetch(`https://rdap.org/domain/${domain}`).then(r=>r.json()).catch(()=>({})), fetch(`https://dns.google/resolve?name=${domain}&type=A`).then(r=>r.json()).catch(()=>({})), fetch(`https://dns.google/resolve?name=${domain}&type=MX`).then(r=>r.json()).catch(()=>({})) ]); const created=rdap.events?.find(e=>e.eventAction==='registration')?.eventDate?.split('T')[0]||'Unknown'; const expiry=rdap.events?.find(e=>e.eventAction==='expiration')?.eventDate?.split('T')[0]||'Unknown'; const hasA=!!dns.Answer?.length; const hasMX=!!ip.Answer?.length; const ageYears=created!=='Unknown'?Math.floor((Date.now()-new Date(created))/(365.25*24*3600*1000)):0; const score=Math.min(95,20+(ageYears*5)+(hasA?10:0)+(hasMX?5:0)); res.innerHTML=`<div class="stats-row" style="flex-wrap:wrap;gap:.5rem">${[['📊 Est. Score',`~${score}/100`],['📅 Registered',created],['⏰ Expires',expiry],['✅ Has DNS',hasA?'Yes':'No'],['📧 Has Email',hasMX?'Yes':'No'],['⏱️ Age',ageYears>0?`${ageYears} years`:'< 1 year']].map(([l,v])=>`<div class="stat-box" style="flex:1;min-width:120px"><div class="stat-val" style="font-size:.85rem">${v}</div><div class="stat-lbl">${l}</div></div>`).join('')}</div>`; }catch(e){ res.innerHTML=`<div class="notice">❌ ${e.message}</div>`; } }; }
+  },
+  'backlink-checker': {
+    title:'Backlink Checker', cat:'SEO Tools', catLink:'#seo-tools',
+    desc:'Find backlinks for any domain using free open data sources.',
+    render: () => `<div class="tool-box"><h3>Enter Domain or URL</h3><input type="text" id="blIn" placeholder="example.com"><div class="btn-row"><button class="btn" onclick="checkBacklinks()"><i class="fas fa-search"></i> 🔗 Check Backlinks</button></div><div id="blResult" style="margin-top:1rem"></div></div>`,
+    init: () => { window.checkBacklinks=async()=>{ const domain=document.getElementById('blIn').value.trim().replace(/^https?:\/\//,'').replace(/\//,''); if(!domain){alert('Enter a domain');return;} const res=document.getElementById('blResult'); res.innerHTML='<div class="notice">⏳ Searching backlinks...</div>'; try{ const r=await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(`https://openpagerank.com/api/v1.0/getPageRank?domains[0]=${domain}`)}`); const d=await r.json(); let parsed; try{parsed=JSON.parse(d.contents);}catch(e){parsed=null;} const rank=parsed?.response?.[0]?.page_rank_integer||'N/A'; const rankDec=parsed?.response?.[0]?.page_rank_decimal?.toFixed(2)||'N/A'; res.innerHTML=`<div class="stats-row" style="flex-wrap:wrap;gap:.5rem"><div class="stat-box" style="flex:1;min-width:120px"><div class="stat-val">${rank}/10</div><div class="stat-lbl">Page Rank</div></div><div class="stat-box" style="flex:1;min-width:120px"><div class="stat-val">${rankDec}</div><div class="stat-lbl">Rank Score</div></div></div><div class="notice" style="margin-top:.8rem">For detailed backlinks:<br><a href="https://ahrefs.com/backlink-checker/?target=${domain}" target="_blank" style="color:var(--accent)" class="btn btn-outline" style="display:inline-flex;margin:.3rem">Ahrefs Free</a> <a href="https://www.semrush.com/analytics/backlinks/?q=${domain}" target="_blank" style="color:var(--accent)" class="btn btn-outline">SEMrush</a></div>`; }catch(e){ res.innerHTML=`<div class="notice">⚠️ Could not fetch data. Use free tools:<br><a href="https://ahrefs.com/backlink-checker/?target=${domain}" target="_blank" style="color:var(--accent)">Ahrefs Backlink Checker</a></div>`; } }; }
+  },
+  'keyword-position': {
+    title:'Keyword Position Checker', cat:'SEO Tools', catLink:'#seo-tools',
+    desc:'Check Google ranking for your keyword — opens live Google search.',
+    render: () => `<div class="tool-box"><h3>Check Keyword Ranking</h3><div><label>Your Domain</label><input type="text" id="kpDomain" placeholder="example.com"></div><div style="margin-top:.8rem"><label>Keyword</label><input type="text" id="kpKeyword" placeholder="e.g. best free online tools"></div><div class="btn-row"><button class="btn" onclick="checkKwPosition()"><i class="fas fa-search"></i> 📍 Check Ranking</button></div><div id="kpResult" style="margin-top:1rem"></div></div>`,
+    init: () => { window.checkKwPosition=()=>{ const domain=document.getElementById('kpDomain').value.trim(); const kw=document.getElementById('kpKeyword').value.trim(); if(!domain||!kw){alert('Enter both domain and keyword');return;} const res=document.getElementById('kpResult'); const searchUrl=`https://www.google.com/search?q=${encodeURIComponent(kw)}`; res.innerHTML=`<div class="notice">📊 To find your ranking for "<strong>${kw}</strong>":<br><br><a href="${searchUrl}" target="_blank" class="btn">🔍 Open Google Search</a><br><br>Then press <strong>Ctrl+F</strong> and search for "<strong>${domain}</strong>" to find your position.<br><br>Tip: Check pages 1-3 (positions 1-30) for best results.</div>`; }; }
+  },
+  'page-speed': {
+    title:'Page Speed Checker', cat:'SEO Tools', catLink:'#seo-tools',
+    desc:'Test website loading speed using Google PageSpeed Insights API.',
+    render: () => `<div class="tool-box"><h3>Enter Website URL</h3><input type="url" id="psUrl" placeholder="https://example.com"><div class="row2" style="margin-top:.8rem"><div><label>Device</label><select id="psDevice"><option value="mobile">Mobile</option><option value="desktop">Desktop</option></select></div></div><div class="btn-row"><button class="btn" onclick="checkPageSpeed()"><i class="fas fa-search"></i> ⚡ Check Speed</button></div><div id="psResult" style="margin-top:1rem"></div></div>`,
+    init: () => { window.checkPageSpeed=async()=>{ const url=document.getElementById('psUrl').value.trim(); if(!url){alert('Enter a URL');return;} const device=document.getElementById('psDevice').value; const res=document.getElementById('psResult'); res.innerHTML='<div class="notice">⏳ Running PageSpeed test (may take 10–20 sec)...</div>'; try{ const apiUrl=`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=${device}&key=AIzaSyAa8yy0GdcGPHdtD083HiGGx_S0vMPScDM`; const r=await fetch(apiUrl); const d=await r.json(); if(d.error){throw new Error(d.error.message);} const cats=d.lighthouseResult?.categories; const perf=Math.round((cats?.performance?.score||0)*100); const acc=Math.round((cats?.accessibility?.score||0)*100); const seo=Math.round((cats?.seo?.score||0)*100); const bp=Math.round((cats?.['best-practices']?.score||0)*100); const color=s=>s>=90?'#68D391':s>=50?'var(--accent)':'#FC8181'; res.innerHTML=`<div class="stats-row" style="flex-wrap:wrap;gap:.5rem">${[['⚡ Performance',perf],['♿ Accessibility',acc],['🔍 SEO',seo],['✅ Best Practices',bp]].map(([l,v])=>`<div class="stat-box" style="flex:1;min-width:120px"><div class="stat-val" style="color:${color(v)}">${v}</div><div class="stat-lbl">${l}</div></div>`).join('')}</div><div class="notice" style="margin-top:.8rem">Scores: ✅ 90-100 Good | ⚠️ 50-89 Average | ❌ 0-49 Poor<br><a href="https://pagespeed.web.dev/report?url=${encodeURIComponent(url)}" target="_blank" style="color:var(--accent)">→ Full Report on PageSpeed Insights</a></div>`; }catch(e){ res.innerHTML=`<div class="notice">⚠️ API limit reached or error. Use <a href="https://pagespeed.web.dev/?url=${encodeURIComponent(url)}" target="_blank" style="color:var(--accent)">pagespeed.web.dev</a> directly.</div>`; } }; }
+  },
 
   // Social & File (show UI placeholders)
-  'yt-thumbnail': { title:'YouTube Thumbnail DL', cat:'Social Media Tools', catLink:'#social-tools', desc:'Download YouTube thumbnails in HD, HQ, or MaxRes quality.', render: () => `<div class="tool-box"><h3>Enter YouTube URL</h3><input type="text" id="ytUrl" placeholder="https://youtube.com/watch?v=..."><div class="btn-row"><button class="btn" onclick="getYTThumb()">Get Thumbnail</button></div><div id="ytThumbResult" style="margin-top:1.5rem;text-align:center"></div></div>`, init: () => { window.getYTThumb = () => { const url=document.getElementById('ytUrl').value; const m=url.match(/(?:v=|youtu\.be\/)([^&\s]+)/); if(!m){alert('Invalid YouTube URL');return;} const id=m[1]; const maxres=`https://img.youtube.com/vi/${id}/maxresdefault.jpg`, hq=`https://img.youtube.com/vi/${id}/hqdefault.jpg`; document.getElementById('ytThumbResult').innerHTML=`<img src="${maxres}" onerror="this.src='${hq}'" style="max-width:100%;border-radius:10px"><div class="btn-row" style="justify-content:center;margin-top:1rem"><a href="${maxres}" download="thumbnail.jpg" class="btn">Download MaxRes</a><a href="${hq}" download="thumbnail_hq.jpg" class="btn btn-outline">Download HQ</a></div>`; }; } },
-  'yt-title-gen': { title:'YouTube Title Generator', cat:'Social Media Tools', catLink:'#social-tools', desc:'Generate click-worthy video titles optimized for views and SEO.', render: () => `<div class="tool-box"><h3>Describe Your Video</h3><textarea id="ytTopicIn" placeholder="e.g. How to make money online as a beginner" style="min-height:100px"></textarea><div class="btn-row"><button class="btn" onclick="genYTTitles()">Generate Titles</button></div><div class="output-label">Generated Titles</div><textarea id="ytTitleOut" class="output-area" readonly style="min-height:160px"></textarea><div class="btn-row"><button class="btn btn-outline" onclick="copyText('ytTitleOut')">Copy</button></div></div>`, init: () => { window.genYTTitles = () => { const t=document.getElementById('ytTopicIn').value||'your topic'; const titles=[`How to ${t} (Complete Guide 2025)`,`${t} — What Nobody Tells You`,`I Tried ${t} for 30 Days — Results`,`Top 10 Tips for ${t}`,`The Ultimate ${t} Tutorial for Beginners`,`Why ${t} Changed Everything`,`${t}: Mistakes to Avoid`,`${t} — Step by Step`,`Shocking Truth About ${t}`,`Watch This Before ${t}`]; document.getElementById('ytTitleOut').value=titles.join('\n'); }; } },
-  'hashtag-gen': { title:'Hashtag Generator', cat:'Social Media Tools', catLink:'#social-tools', desc:'Generate trending hashtags for Instagram, Twitter, and TikTok.', render: () => `<div class="tool-box"><h3>Topic or Niche</h3><input type="text" id="hashIn" placeholder="e.g. fitness, travel, food"><div class="btn-row"><button class="btn" onclick="genHashtags()">Generate Hashtags</button></div><div class="output-label">Generated Hashtags</div><div class="output-area" id="hashOut" style="min-height:100px">Hashtags will appear here...</div><div class="btn-row"><button class="btn btn-outline" onclick="copyEl('hashOut')">Copy</button></div></div>`, init: () => { window.genHashtags = () => { const t=(document.getElementById('hashIn').value||'topic').toLowerCase().replace(/\s+/g,''); const base=[t,`${t}love`,`${t}life`,`${t}daily`,`best${t}`,`${t}tips`,`${t}goals`,`${t}community`,`${t}motivation`,`${t}inspiration`,`viral`,`trending`,`fyp`,`explore`,`follow`,`like`,`share`,`instagood`,`photooftheday`,`content`]; document.getElementById('hashOut').textContent=base.map(h=>`#${h}`).join(' '); }; } },
+  'yt-thumbnail': { title:'YouTube Thumbnail DL', cat:'Social Media Tools', catLink:'#social-tools', desc:'Download YouTube thumbnails in HD, HQ, or MaxRes quality.', render: () => `<div class="tool-box"><h3>Enter YouTube URL</h3><input type="text" id="ytUrl" placeholder="https://youtube.com/watch?v=..."><div class="btn-row"><button class="btn" onclick="getYTThumb()"><i class="fas fa-bolt"></i> Get Thumbnail</button></div><div id="ytThumbResult" style="margin-top:1.5rem;text-align:center"></div></div>`, init: () => { window.getYTThumb = () => { const url=document.getElementById('ytUrl').value; const m=url.match(/(?:v=|youtu\.be\/)([^&\s]+)/); if(!m){alert('Invalid YouTube URL');return;} const id=m[1]; const maxres=`https://img.youtube.com/vi/${id}/maxresdefault.jpg`, hq=`https://img.youtube.com/vi/${id}/hqdefault.jpg`; document.getElementById('ytThumbResult').innerHTML=`<img src="${maxres}" onerror="this.src='${hq}'" style="max-width:100%;border-radius:10px"><div class="btn-row" style="justify-content:center;margin-top:1rem"><a href="${maxres}" download="thumbnail.jpg" class="btn">Download MaxRes</a><a href="${hq}" download="thumbnail_hq.jpg" class="btn btn-outline">Download HQ</a></div>`; }; } },
+  'yt-title-gen': { title:'YouTube Title Generator', cat:'Social Media Tools', catLink:'#social-tools', desc:'Generate click-worthy video titles optimized for views and SEO.', render: () => `<div class="tool-box"><h3>Describe Your Video</h3><textarea id="ytTopicIn" placeholder="e.g. How to make money online as a beginner" style="min-height:100px"></textarea><div class="btn-row"><button class="btn" onclick="genYTTitles()"><i class="fas fa-bolt"></i> Generate Titles</button></div><div class="output-label">Generated Titles</div><textarea id="ytTitleOut" class="output-area" readonly style="min-height:160px"></textarea><div class="btn-row"><button class="btn btn-outline" onclick="copyText('ytTitleOut')">Copy</button></div></div>`, init: () => { window.genYTTitles = () => { const t=document.getElementById('ytTopicIn').value||'your topic'; const titles=[`How to ${t} (Complete Guide 2025)`,`${t} — What Nobody Tells You`,`I Tried ${t} for 30 Days — Results`,`Top 10 Tips for ${t}`,`The Ultimate ${t} Tutorial for Beginners`,`Why ${t} Changed Everything`,`${t}: Mistakes to Avoid`,`${t} — Step by Step`,`Shocking Truth About ${t}`,`Watch This Before ${t}`]; document.getElementById('ytTitleOut').value=titles.join('\n'); }; } },
+  'hashtag-gen': { title:'Hashtag Generator', cat:'Social Media Tools', catLink:'#social-tools', desc:'Generate trending hashtags for Instagram, Twitter, and TikTok.', render: () => `<div class="tool-box"><h3>Topic or Niche</h3><input type="text" id="hashIn" placeholder="e.g. fitness, travel, food"><div class="btn-row"><button class="btn" onclick="genHashtags()"><i class="fas fa-bolt"></i> Generate Hashtags</button></div><div class="output-label">Generated Hashtags</div><div class="output-area" id="hashOut" style="min-height:100px">Hashtags will appear here...</div><div class="btn-row"><button class="btn btn-outline" onclick="copyEl('hashOut')">Copy</button></div></div>`, init: () => { window.genHashtags = () => { const t=(document.getElementById('hashIn').value||'topic').toLowerCase().replace(/\s+/g,''); const base=[t,`${t}love`,`${t}life`,`${t}daily`,`best${t}`,`${t}tips`,`${t}goals`,`${t}community`,`${t}motivation`,`${t}inspiration`,`viral`,`trending`,`fyp`,`explore`,`follow`,`like`,`share`,`instagood`,`photooftheday`,`content`]; document.getElementById('hashOut').textContent=base.map(h=>`#${h}`).join(' '); }; } },
+
+  // ── SOCIAL MEDIA (remaining)
+  'yt-tag-gen': {
+    title:'YouTube Tag Generator', cat:'Social Media Tools', catLink:'#social-tools',
+    desc:'Generate relevant video tags to improve YouTube search ranking.',
+    render: () => `<div class="tool-box"><h3>Video Topic / Title</h3><input type="text" id="ytTagIn" placeholder="e.g. How to lose weight fast"><div class="btn-row"><button class="btn" onclick="genYTTags()"><i class="fas fa-bolt"></i> Generate Tags</button></div><div class="output-label">Generated Tags</div><textarea id="ytTagOut" class="output-area" readonly style="min-height:120px"></textarea><div class="btn-row"><button class="btn btn-outline" onclick="copyText('ytTagOut')">Copy Tags</button></div></div>`,
+    init: () => { window.genYTTags = () => { const t=(document.getElementById('ytTagIn').value||'topic').toLowerCase(); const words=t.split(' '); const tags=[t,...words,`how to ${t}`,`${t} tutorial`,`${t} tips`,`${t} 2025`,`best ${t}`,`${t} guide`,`${t} beginners`,`${t} for free`,`learn ${t}`,`${t} explained`,`${t} step by step`,`${t} hindi`,`${t} english`]; document.getElementById('ytTagOut').value=tags.map(tag=>tag.trim()).filter(Boolean).join(', '); }; }
+  },
+
+  'yt-desc-gen': {
+    title:'YouTube Description Generator', cat:'Social Media Tools', catLink:'#social-tools',
+    desc:'Auto-generate SEO-rich YouTube video descriptions with timestamps.',
+    render: () => `<div class="tool-box"><h3>Video Details</h3><div><label>Video Title</label><input type="text" id="ydTitle" placeholder="My Amazing Video"></div><div style="margin-top:.8rem"><label>Main Topic</label><textarea id="ydTopic" placeholder="What is your video about?" style="min-height:80px"></textarea></div><div style="margin-top:.8rem"><label>Your Channel Name</label><input type="text" id="ydChannel" placeholder="My Channel"></div><div class="btn-row"><button class="btn" onclick="genYTDesc()"><i class="fas fa-bolt"></i> Generate Description</button></div><div class="output-label">Generated Description</div><textarea id="ydOut" class="output-area" readonly style="min-height:220px"></textarea><div class="btn-row"><button class="btn btn-outline" onclick="copyText('ydOut')">Copy</button></div></div>`,
+    init: () => { window.genYTDesc = () => { const title=document.getElementById('ydTitle').value||'My Video'; const topic=document.getElementById('ydTopic').value||'this topic'; const ch=document.getElementById('ydChannel').value||'My Channel'; document.getElementById('ydOut').value=`🎬 ${title}\n\nIn this video, I cover everything you need to know about ${topic}. Whether you're a beginner or advanced, this video has something for everyone!\n\n⏱️ TIMESTAMPS:\n00:00 - Introduction\n01:30 - Getting Started\n05:00 - Main Content\n12:00 - Tips & Tricks\n18:00 - Conclusion\n\n✅ WHAT YOU'LL LEARN:\n• Key concepts about ${topic}\n• Step-by-step process\n• Pro tips and tricks\n• Common mistakes to avoid\n\n🔔 Subscribe to ${ch} for more videos!\n👍 Like this video if it helped you!\n💬 Comment your questions below!\n\n#${topic.replace(/\s+/g,'')} #youtube #tutorial #howto #tips\n\n📌 RELATED VIDEOS:\n[Add your related video links here]\n\n© ${new Date().getFullYear()} ${ch} - All Rights Reserved`; }; }
+  },
+
+  'yt-channel-id': {
+    title:'YouTube Channel ID Finder', cat:'Social Media Tools', catLink:'#social-tools',
+    desc:'Find the unique channel ID of any YouTube channel by URL or name.',
+    render: () => `<div class="tool-box"><h3>Enter YouTube Channel URL</h3><input type="text" id="ycUrl" placeholder="https://youtube.com/@channelname or https://youtube.com/channel/UC..."><div class="btn-row"><button class="btn" onclick="findChannelID()"><i class="fas fa-search"></i> Find Channel ID</button></div><div class="output-label">Result</div><div class="output-area" id="ycOut">Enter a YouTube channel URL above</div></div>`,
+    init: () => { window.findChannelID = () => { const url=document.getElementById('ycUrl').value.trim(); let id=''; const m1=url.match(/channel\/(UC[a-zA-Z0-9_-]+)/); const m2=url.match(/@([a-zA-Z0-9_.-]+)/); if(m1){id=m1[1]; document.getElementById('ycOut').textContent=`Channel ID: ${id}\n\nFull URL: https://youtube.com/channel/${id}`;}else if(m2){document.getElementById('ycOut').textContent=`Handle: @${m2[1]}\n\nTo get the exact UC... Channel ID, open the channel page, right-click → View Page Source, and search for "channelId".\n\nOr use: https://www.youtube.com/@${m2[1]}/about`;}else{document.getElementById('ycOut').textContent='Please enter a valid YouTube channel URL.';} }; }
+  },
+
+  'instagram-dl': {
+    title:'Instagram Photo Downloader', cat:'Social Media Tools', catLink:'#social-tools',
+    desc:'Download Instagram photos and reels by pasting the post URL.',
+    render: () => `<div class="tool-box"><h3>Enter Instagram Post URL</h3><input type="url" id="igUrl" placeholder="https://www.instagram.com/p/..."><div class="btn-row"><button class="btn" onclick="showComingSoon('Instagram Downloader')"><i class="fas fa-download"></i> Download</button></div><div class="notice" style="margin-top:1rem">⚠️ <strong>Instagram restricts direct downloads.</strong> Use browser extensions like "InstaSave" or online tools like <a href="https://snapinsta.app" target="_blank" style="color:var(--accent)">SnapInsta.app</a> for reliable downloads.</div></div>`
+  },
+
+  'tiktok-dl': {
+    title:'TikTok Video Downloader', cat:'Social Media Tools', catLink:'#social-tools',
+    desc:'Download TikTok videos without watermark.',
+    render: () => `<div class="tool-box"><h3>Enter TikTok Video URL</h3><input type="url" id="ttUrl" placeholder="https://www.tiktok.com/@user/video/..."><div class="btn-row"><button class="btn" onclick="showComingSoon('TikTok Downloader')"><i class="fas fa-download"></i> Download</button></div><div class="notice" style="margin-top:1rem">⚠️ <strong>TikTok restricts direct downloads.</strong> Use <a href="https://snaptik.app" target="_blank" style="color:var(--accent)">SnapTik.app</a> or <a href="https://ssstik.io" target="_blank" style="color:var(--accent)">ssstik.io</a> for watermark-free downloads.</div></div>`
+  },
+
+  'twitter-dl': {
+    title:'Twitter / X Video Downloader', cat:'Social Media Tools', catLink:'#social-tools',
+    desc:'Download videos from X (Twitter) tweets.',
+    render: () => `<div class="tool-box"><h3>Enter Tweet URL</h3><input type="url" id="twUrl" placeholder="https://twitter.com/user/status/..."><div class="btn-row"><button class="btn" onclick="showComingSoon('Twitter Downloader')"><i class="fas fa-download"></i> Download</button></div><div class="notice" style="margin-top:1rem">⚠️ <strong>Twitter API required.</strong> Use <a href="https://twittervideodownloader.com" target="_blank" style="color:var(--accent)">twittervideodownloader.com</a> as alternative.</div></div>`
+  },
+
+  'facebook-dl': {
+    title:'Facebook Video Downloader', cat:'Social Media Tools', catLink:'#social-tools',
+    desc:'Download Facebook videos in HD or SD from any public post.',
+    render: () => `<div class="tool-box"><h3>Enter Facebook Video URL</h3><input type="url" id="fbUrl" placeholder="https://www.facebook.com/watch?v=..."><div class="btn-row"><button class="btn" onclick="showComingSoon('Facebook Downloader')"><i class="fas fa-download"></i> Download</button></div><div class="notice" style="margin-top:1rem">⚠️ <strong>Facebook restricts direct downloads.</strong> Use <a href="https://fdown.net" target="_blank" style="color:var(--accent)">fdown.net</a> or <a href="https://fbdownloader.app" target="_blank" style="color:var(--accent)">fbdownloader.app</a> as alternative.</div></div>`
+  },
+
+  // ── FILE TOOLS
+  'zip-extractor': {
+    title:'ZIP File Extractor', cat:'File Tools', catLink:'#file-tools',
+    desc:'Extract ZIP archive contents directly in your browser, no software needed.',
+    render: () => `<div class="tool-box"><h3>Upload ZIP File</h3><div class="drop-zone" onclick="document.getElementById('zipIn').click()"><div class="drop-icon">🗜️</div><div class="drop-text"><strong>Click to upload ZIP file</strong><br>Extracts in your browser — no upload to server</div><input type="file" id="zipIn" accept=".zip" style="display:none" onchange="extractZIP(this)"></div><div id="zipResult" style="margin-top:1rem"></div></div>`,
+    init: () => {
+      window.extractZIP = (input) => {
+        const file = input.files[0]; if(!file) return;
+        const result = document.getElementById('zipResult');
+        result.innerHTML = '<div class="notice">⏳ Loading JSZip library...</div>';
+        if(window.JSZip) { doExtract(file, result); return; }
+        const s = document.createElement('script');
+        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+        s.onload = () => doExtract(file, result);
+        s.onerror = () => { result.innerHTML = '<div class="notice">❌ Failed to load JSZip. Check your internet connection.</div>'; };
+        document.head.appendChild(s);
+      };
+      window.doExtract = (file, result) => {
+        JSZip.loadAsync(file).then(zip => {
+          const files = Object.keys(zip.files);
+          result.innerHTML = `<div class="notice">✅ <strong>${files.length} files found in ZIP:</strong></div><div style="margin-top:.8rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:1rem;max-height:300px;overflow-y:auto">${files.map(f=>`<div style="font-family:monospace;font-size:.75rem;color:var(--text-dim);padding:.25rem 0;border-bottom:1px solid var(--border)">${zip.files[f].dir?'📁':'📄'} ${f}</div>`).join('')}</div><div class="btn-row" style="margin-top:1rem"><button class="btn" onclick="downloadAllFiles('${file.name}')"><i class="fas fa-bolt"></i> Extract All Files</button></div>`;
+          window._zipRef = zip;
+        }).catch(e => { result.innerHTML = `<div class="notice">❌ Error: ${e.message}</div>`; });
+      };
+      window.downloadAllFiles = () => {
+        if(!window._zipRef) return;
+        Object.keys(window._zipRef.files).forEach(name => {
+          if(!window._zipRef.files[name].dir) {
+            window._zipRef.files[name].async('blob').then(blob => {
+              const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name.split('/').pop(); a.click();
+            });
+          }
+        });
+      };
+    }
+  },
+
+  'file-converter': {
+    title:'File Converter', cat:'File Tools', catLink:'#file-tools',
+    desc:'Convert files between dozens of popular formats quickly and free.',
+    render: () => `<div class="tool-box"><h3>Select Conversion Type</h3><div class="row2"><div><label>Category</label><select id="fcCat" onchange="updateFCFormats()"><option value="image">Image</option><option value="doc">Document</option><option value="audio">Audio</option></select></div><div><label>Convert To</label><select id="fcTo"><option>PNG</option><option>JPG</option><option>WebP</option></select></div></div><div style="margin-top:.8rem"><div class="drop-zone" onclick="document.getElementById('fcInput').click()"><div class="drop-icon">🔄</div><div class="drop-text"><strong>Click to upload file</strong></div><input type="file" id="fcInput" style="display:none" onchange="doFileConvert(this)"></div></div><div id="fcResult" style="margin-top:1rem"></div></div>`,
+    init: () => {
+      window.updateFCFormats = () => {
+        const cat = document.getElementById('fcCat').value;
+        const formats = {image:['PNG','JPG','WebP','BMP'],doc:['PDF','DOCX','TXT'],audio:['MP3','WAV','OGG']};
+        document.getElementById('fcTo').innerHTML = formats[cat].map(f=>`<option>${f}</option>`).join('');
+      };
+      window.doFileConvert = (input) => {
+        const file = input.files[0]; if(!file) return;
+        const to = document.getElementById('fcTo').value.toLowerCase();
+        const cat = document.getElementById('fcCat').value;
+        if(cat === 'image') {
+          const reader = new FileReader();
+          reader.onload = e => {
+            const img = new Image(); img.onload = () => {
+              const c = document.createElement('canvas'); c.width=img.width; c.height=img.height;
+              c.getContext('2d').drawImage(img,0,0);
+              const mime = to==='jpg'?'image/jpeg':to==='webp'?'image/webp':'image/png';
+              const data = c.toDataURL(mime, 0.92);
+              const a = document.createElement('a'); a.href=data; a.download=`converted.${to}`; a.click();
+              document.getElementById('fcResult').innerHTML = `<div class="notice">✅ Converted to ${to.toUpperCase()} — download started!</div>`;
+            }; img.src = e.target.result;
+          }; reader.readAsDataURL(file);
+        } else { showComingSoon('File Converter for ' + cat); }
+      };
+    }
+  },
+
+  'file-size-reducer': {
+    title:'File Size Reducer', cat:'File Tools', catLink:'#file-tools',
+    desc:'Compress documents, images, and files to minimize storage footprint.',
+    render: () => `<div class="tool-box"><h3>Upload File to Compress</h3><div class="drop-zone" onclick="document.getElementById('fsrIn').click()"><div class="drop-icon">📦</div><div class="drop-text"><strong>Click to upload file</strong><br>Images will be compressed in browser</div><input type="file" id="fsrIn" accept="image/*,.pdf" style="display:none" onchange="reduceFSize(this)"></div><div style="margin-top:1rem"><label>Quality: <span id="fsrQ">70</span>%</label><input type="range" min="10" max="95" value="70" oninput="document.getElementById('fsrQ').textContent=this.value" id="fsrQR"></div><div class="btn-row"><button class="btn" onclick="reduceFSize()"><i class="fas fa-compress-alt"></i> Compress</button></div><div id="fsrResult" style="margin-top:1rem"></div></div>`,
+    init: () => {
+      window.reduceFSize = (input) => {
+        const el = input || { files: [null] };
+        const fileInput = document.getElementById('fsrIn');
+        const file = fileInput.files[0]; if(!file) return;
+        if(!file.type.startsWith('image/')) { showComingSoon('File Size Reducer for non-image files'); return; }
+        const q = parseInt(document.getElementById('fsrQR').value)/100;
+        const reader = new FileReader();
+        reader.onload = e => {
+          const img = new Image(); img.onload = () => {
+            const c = document.createElement('canvas'); c.width=img.width; c.height=img.height;
+            c.getContext('2d').drawImage(img,0,0);
+            const data = c.toDataURL('image/jpeg', q);
+            const origKB = (file.size/1024).toFixed(1);
+            const newKB = ((data.length * 3/4)/1024).toFixed(1);
+            const saved = (((file.size - newKB*1024)/file.size)*100).toFixed(0);
+            const a = document.createElement('a'); a.href=data; a.download='compressed.jpg'; a.click();
+            document.getElementById('fsrResult').innerHTML = `<div class="stats-row"><div class="stat-box"><div class="stat-val">${origKB} KB</div><div class="stat-lbl">Original</div></div><div class="stat-box"><div class="stat-val" style="color:var(--accent)">${newKB} KB</div><div class="stat-lbl">Compressed</div></div><div class="stat-box"><div class="stat-val" style="color:#68D391">${saved}%</div><div class="stat-lbl">Saved</div></div></div>`;
+          }; img.src = e.target.result;
+        }; reader.readAsDataURL(file);
+      };
+    }
+  },
+
+  'audio-converter': {
+    title:'Audio Converter', cat:'File Tools', catLink:'#file-tools',
+    desc:'Convert audio files between MP3, WAV, OGG, FLAC, and more.',
+    render: () => `<div class="tool-box"><h3>Upload Audio File</h3><div class="drop-zone" onclick="document.getElementById('acIn').click()"><div class="drop-icon">🎵</div><div class="drop-text"><strong>Click to upload audio file</strong><br>MP3, WAV, OGG, FLAC, AAC</div><input type="file" id="acIn" accept="audio/*" style="display:none" onchange="showFileName(this,'acName')"></div><div id="acName" style="margin-top:.5rem;font-size:.8rem;color:var(--text-dim)"></div><div style="margin-top:.8rem"><label>Convert To</label><select id="acTo"><option value="mp3">MP3</option><option value="wav">WAV</option><option value="ogg">OGG</option></select></div><div class="btn-row"><button class="btn" onclick="showComingSoon('Audio Converter')"><i class="fas fa-exchange-alt"></i> Convert Audio</button></div><div class="notice" style="margin-top:1rem">🔌 Audio conversion needs <strong>FFmpeg WebAssembly</strong>. Use <a href="https://cloudconvert.com" target="_blank" style="color:var(--accent)">CloudConvert.com</a> for free audio conversion.</div></div>`
+  },
+
+  'video-converter': {
+    title:'Video Converter', cat:'File Tools', catLink:'#file-tools',
+    desc:'Convert videos to MP4, AVI, MOV, MKV, and other formats.',
+    render: () => `<div class="tool-box"><h3>Upload Video File</h3><div class="drop-zone" onclick="document.getElementById('vcIn').click()"><div class="drop-icon">🎬</div><div class="drop-text"><strong>Click to upload video</strong><br>MP4, AVI, MOV, MKV, WebM</div><input type="file" id="vcIn" accept="video/*" style="display:none" onchange="showFileName(this,'vcName')"></div><div id="vcName" style="margin-top:.5rem;font-size:.8rem;color:var(--text-dim)"></div><div style="margin-top:.8rem"><label>Convert To</label><select id="vcTo"><option>MP4</option><option>WebM</option><option>MOV</option><option>AVI</option></select></div><div class="btn-row"><button class="btn" onclick="showComingSoon('Video Converter')"><i class="fas fa-exchange-alt"></i> Convert Video</button></div><div class="notice" style="margin-top:1rem">🔌 Video conversion requires <strong>FFmpeg</strong> server-side processing. Use <a href="https://cloudconvert.com" target="_blank" style="color:var(--accent)">CloudConvert.com</a> for free video conversion.</div></div>`
+  },
+
+  'video-compressor': {
+    title:'Video Compressor', cat:'File Tools', catLink:'#file-tools',
+    desc:'Reduce video file size for easier sharing and uploading.',
+    render: () => `<div class="tool-box"><h3>Upload Video</h3><div class="drop-zone" onclick="document.getElementById('vcoIn').click()"><div class="drop-icon">📹</div><div class="drop-text"><strong>Click to upload video</strong></div><input type="file" id="vcoIn" accept="video/*" style="display:none" onchange="showFileName(this,'vcoName')"></div><div id="vcoName" style="margin-top:.5rem;font-size:.8rem;color:var(--text-dim)"></div><div style="margin-top:.8rem"><label>Compression Level</label><select id="vcoLevel"><option>Low (Better Quality)</option><option selected>Medium (Balanced)</option><option>High (Smaller Size)</option></select></div><div class="btn-row"><button class="btn" onclick="showComingSoon('Video Compressor')"><i class="fas fa-compress-alt"></i> Compress Video</button></div><div class="notice" style="margin-top:1rem">🔌 Video compression needs FFmpeg. Use <a href="https://www.veed.io" target="_blank" style="color:var(--accent)">VEED.io</a> or <a href="https://handbrake.fr" target="_blank" style="color:var(--accent)">HandBrake</a> for local compression.</div></div>`
+  },
+
+  'mp3-cutter': {
+    title:'MP3 Cutter', cat:'File Tools', catLink:'#file-tools',
+    desc:'Trim or cut MP3 audio files to any start and end point online.',
+    render: () => `<div class="tool-box"><h3>Upload MP3 File</h3><div class="drop-zone" onclick="document.getElementById('mpIn').click()"><div class="drop-icon">✂️🎵</div><div class="drop-text"><strong>Click to upload MP3</strong></div><input type="file" id="mpIn" accept="audio/*" style="display:none" onchange="loadMP3(this)"></div><div id="mpPlayer" style="margin-top:1rem"></div><div class="row2" style="margin-top:1rem"><div><label>Start Time (seconds)</label><input type="number" id="mpStart" value="0" min="0"></div><div><label>End Time (seconds)</label><input type="number" id="mpEnd" value="30" min="1"></div></div><div class="btn-row"><button class="btn" onclick="showComingSoon('MP3 Cutter')"><i class="fas fa-bolt"></i> Cut Audio</button></div><div class="notice" style="margin-top:1rem">🔌 Audio cutting needs <strong>Web Audio API + encoding</strong>. Use <a href="https://mp3cut.net" target="_blank" style="color:var(--accent)">mp3cut.net</a> as a free alternative.</div></div>`,
+    init: () => { window.loadMP3 = (input) => { const file=input.files[0]; if(!file) return; const url=URL.createObjectURL(file); document.getElementById('mpPlayer').innerHTML=`<audio controls style="width:100%;margin-top:.5rem"><source src="${url}"></audio>`; }; }
+  },
+
+  'video-to-gif': {
+    title:'Video to GIF Converter', cat:'File Tools', catLink:'#file-tools',
+    desc:'Convert a video clip or portion into an animated GIF.',
+    render: () => `<div class="tool-box"><h3>Upload Video</h3><div class="drop-zone" onclick="document.getElementById('vtgIn').click()"><div class="drop-icon">🎬→🎞️</div><div class="drop-text"><strong>Click to upload video</strong><br>MP4, WebM, MOV</div><input type="file" id="vtgIn" accept="video/*" style="display:none" onchange="loadVTG(this)"></div><div id="vtgPreview" style="margin-top:1rem"></div><div class="row2" style="margin-top:1rem"><div><label>Start (sec)</label><input type="number" id="vtgS" value="0" min="0"></div><div><label>Duration (sec)</label><input type="number" id="vtgD" value="5" min="1" max="30"></div><div><label>Width (px)</label><input type="number" id="vtgW" value="480"></div><div><label>FPS</label><input type="number" id="vtgFPS" value="10" min="5" max="30"></div></div><div class="btn-row"><button class="btn" onclick="showComingSoon('Video to GIF')"><i class="fas fa-exchange-alt"></i> Convert to GIF</button></div><div class="notice" style="margin-top:1rem">🔌 GIF encoding needs FFmpeg. Use <a href="https://ezgif.com/video-to-gif" target="_blank" style="color:var(--accent)">ezgif.com</a> for free conversion.</div></div>`,
+    init: () => { window.loadVTG = (input) => { const file=input.files[0]; if(!file) return; const url=URL.createObjectURL(file); document.getElementById('vtgPreview').innerHTML=`<video controls style="max-width:100%;border-radius:8px"><source src="${url}"></video>`; }; }
+  },
+
+  'gif-maker': {
+    title:'GIF Maker', cat:'File Tools', catLink:'#file-tools',
+    desc:'Create animated GIFs from a series of uploaded images.',
+    render: () => `<div class="tool-box"><h3>Upload Images (Select Multiple)</h3><div class="drop-zone" onclick="document.getElementById('gmIn').click()"><div class="drop-icon">🖼️🎞️</div><div class="drop-text"><strong>Click to upload images</strong><br>Select multiple images — they will become GIF frames</div><input type="file" id="gmIn" accept="image/*" multiple style="display:none" onchange="loadGMImages(this)"></div><div id="gmFrames" style="margin-top:1rem;display:flex;flex-wrap:wrap;gap:.5rem"></div><div class="row2" style="margin-top:1rem"><div><label>Frame Delay (ms)</label><input type="number" id="gmDelay" value="200" min="50"></div><div><label>Loop</label><select id="gmLoop"><option value="0">Infinite</option><option value="1">Once</option><option value="3">3 Times</option></select></div></div><div class="btn-row"><button class="btn" onclick="showComingSoon('GIF Maker')"><i class="fas fa-plus-circle"></i> Create GIF</button></div><div class="notice" style="margin-top:1rem">🔌 GIF creation needs a library. Use <a href="https://ezgif.com/maker" target="_blank" style="color:var(--accent)">ezgif.com/maker</a> for free GIF creation.</div></div>`,
+    init: () => { window.loadGMImages = (input) => { const frames=document.getElementById('gmFrames'); frames.innerHTML=''; Array.from(input.files).forEach((f,i)=>{ const url=URL.createObjectURL(f); frames.innerHTML+=`<div style="position:relative"><img src="${url}" style="width:80px;height:60px;object-fit:cover;border-radius:6px;border:2px solid var(--border2)"><span style="position:absolute;top:2px;left:4px;font-size:.6rem;color:white;background:rgba(0,0,0,.6);padding:1px 4px;border-radius:3px">${i+1}</span></div>`; }); }; }
+  },
+
+  'gif-to-video': {
+    title:'GIF to Video Converter', cat:'File Tools', catLink:'#file-tools',
+    desc:'Convert animated GIF files into MP4 or WebM video for web use.',
+    render: () => `<div class="tool-box"><h3>Upload GIF File</h3><div class="drop-zone" onclick="document.getElementById('gtvIn').click()"><div class="drop-icon">🎞️→🎬</div><div class="drop-text"><strong>Click to upload GIF</strong></div><input type="file" id="gtvIn" accept=".gif,image/gif" style="display:none" onchange="loadGTV(this)"></div><div id="gtvPreview" style="margin-top:1rem"></div><div style="margin-top:.8rem"><label>Output Format</label><select id="gtvFmt"><option value="mp4">MP4</option><option value="webm">WebM</option></select></div><div class="btn-row"><button class="btn" onclick="showComingSoon('GIF to Video')"><i class="fas fa-exchange-alt"></i> Convert to Video</button></div><div class="notice" style="margin-top:1rem">🔌 Use <a href="https://ezgif.com/gif-to-mp4" target="_blank" style="color:var(--accent)">ezgif.com/gif-to-mp4</a> for free conversion.</div></div>`,
+    init: () => { window.loadGTV = (input) => { const file=input.files[0]; if(!file) return; const url=URL.createObjectURL(file); document.getElementById('gtvPreview').innerHTML=`<img src="${url}" style="max-width:100%;border-radius:8px;max-height:200px">`; }; }
+  },
 };
 
 // ══════════════════════════════════════════════
@@ -2038,7 +2340,7 @@ function fileUploadTool(name, icon, accept, btnLabel, hint, multiple=false) {
       <input type="file" id="ftInput" accept="${accept}" style="display:none"${multiple?' multiple':''} onchange="showFileName(this,'ftName')">
     </div>
     <div id="ftName" style="margin-top:.6rem;font-size:.8rem;color:var(--text-dim)"></div>
-    <div class="btn-row"><button class="btn" onclick="showComingSoon('${name}')">${btnLabel}</button></div>
+    <div class="btn-row"><button class="btn" onclick="showComingSoon('${name}')"><i class="fas fa-bolt"></i> ${btnLabel}</button></div>
     <div class="notice" style="margin-top:1rem">ℹ️ <strong>${name}</strong> — Full backend processing coming soon. Connect your own API endpoint to enable this feature.</div>
   </div>`;
 }
@@ -2047,14 +2349,36 @@ function serverSideTool(name, icon, label, placeholder, inputType, btnLabel) {
   return `<div class="tool-box">
     <h3>${label}</h3>
     <input type="${inputType}" id="sstInput" placeholder="${placeholder}">
-    <div class="btn-row"><button class="btn" onclick="showComingSoon('${name}')">${btnLabel}</button></div>
+    <div class="btn-row"><button class="btn" onclick="showComingSoon('${name}')"><i class="fas fa-bolt"></i> ${btnLabel}</button></div>
     <div class="notice" style="margin-top:1rem">🔌 <strong>${name}</strong> requires a server-side API. Connect your backend to enable real results.</div>
   </div>`;
 }
 
 // ══════════════════════════════════════════════
-// GLOBAL HELPERS
+// PDF LIBRARY LOADERS (lazy — only loads when needed)
 // ══════════════════════════════════════════════
+function loadPDFLib(callback) {
+  if(window.PDFLib) { callback(); return; }
+  const s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js';
+  s.onload = () => { callback(); };
+  s.onerror = () => { alert('Failed to load pdf-lib. Check your internet connection.'); };
+  document.head.appendChild(s);
+}
+
+function loadPDFJS(callback) {
+  if(window.pdfjsLib) { callback(); return; }
+  const s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+  s.onload = () => {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    callback();
+  };
+  s.onerror = () => { alert('Failed to load PDF.js. Check your internet connection.'); };
+  document.head.appendChild(s);
+}
+
+
 window.copyText = (id) => {
   const el = document.getElementById(id);
   if(!el) return;
