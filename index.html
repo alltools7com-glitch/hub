@@ -203,6 +203,36 @@
 
     /* ALL TOOLS */
     #all-tools{background:var(--bg);border-top:1px solid var(--border);padding-top:5rem;padding-bottom:5rem}
+
+    /* ── CATEGORY FILTER BAR ── */
+    .cat-filter-wrap{margin-bottom:2.5rem}
+    .cat-filter-top{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:1rem}
+    .cat-search-box{display:flex;align-items:center;gap:.6rem;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:.5rem 1rem;flex:1;max-width:380px;transition:border-color .2s}
+    .cat-search-box:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(212,255,0,.08)}
+    .cat-search-box i{color:var(--muted);font-size:.8rem;flex-shrink:0}
+    .cat-search-box:focus-within i{color:var(--accent)}
+    .cat-search-box input{background:none;border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:.88rem;color:var(--text);width:100%}
+    .cat-search-box input::placeholder{color:var(--muted)}
+    .cat-result-count{font-family:'Space Mono',monospace;font-size:.65rem;letter-spacing:.08em;color:var(--muted);white-space:nowrap}
+    .cat-result-count span{color:var(--accent);font-weight:700}
+
+    .cat-btns{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+    .cat-btn{font-family:'Space Mono',monospace;font-size:.62rem;letter-spacing:.07em;text-transform:uppercase;
+      background:var(--surface2);border:1px solid var(--border2);color:var(--text-dim);
+      padding:.42rem .9rem;border-radius:999px;cursor:pointer;transition:all .2s;
+      display:inline-flex;align-items:center;gap:.38rem;white-space:nowrap}
+    .cat-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(212,255,0,.06)}
+    .cat-btn.active{background:var(--accent);border-color:var(--accent);color:var(--bg);font-weight:700}
+    .cat-btn .cb-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;opacity:.7}
+    .cat-btn.active .cb-dot{opacity:1}
+    .cat-no-result{text-align:center;padding:4rem 2rem;display:none}
+    .cat-no-result h3{font-family:'Bebas Neue',sans-serif;font-size:2rem;color:var(--text);margin-bottom:.5rem}
+    .cat-no-result p{color:var(--text-dim);font-size:.9rem}
+    body.light-mode .cat-btn{background:var(--surface2);border-color:var(--border2);color:var(--text-dim)}
+    body.light-mode .cat-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(90,0,212,.06)}
+    body.light-mode .cat-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+    body.light-mode .cat-search-box{background:var(--surface2);border-color:var(--border2)}
+    body.light-mode .cat-search-box:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(90,0,212,.08)}
     .cb{margin-bottom:4rem}
     .cb:last-child{margin-bottom:0}
     .cb-hdr{display:flex;align-items:center;gap:.9rem;margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:1px solid var(--border)}
@@ -1035,7 +1065,34 @@
   <div class="s-in">
     <div class="s-hdr rev"><div class="s-ey">// Complete Library</div><h2 class="s-tit">All 120+ Tools</h2><p class="s-desc">Every tool is free, fast and mobile-friendly. No sign-up required.</p></div>
 
-    <!-- helper macro: each tool block below -->
+    <!-- ── CATEGORY FILTER BAR ── -->
+    <div class="cat-filter-wrap">
+      <div class="cat-filter-top">
+        <div class="cat-search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" id="catSearch" placeholder="Search tools by name or description…" oninput="catFilter(this.value)">
+        </div>
+        <div class="cat-result-count" id="catCount"><span id="catCountNum">120+</span> tools found</div>
+      </div>
+      <div class="cat-btns" id="catBtns">
+        <button class="cat-btn active" onclick="catSelect(this,'all')" data-cat="all"><div class="cb-dot"></div>All Categories</button>
+        <button class="cat-btn" onclick="catSelect(this,'image-tools')" data-cat="image-tools"><div class="cb-dot"></div>🖼 Image</button>
+        <button class="cat-btn" onclick="catSelect(this,'pdf-tools')" data-cat="pdf-tools"><div class="cb-dot"></div>📄 PDF</button>
+        <button class="cat-btn" onclick="catSelect(this,'text-tools')" data-cat="text-tools"><div class="cb-dot"></div>📝 Text</button>
+        <button class="cat-btn" onclick="catSelect(this,'dev-tools')" data-cat="dev-tools"><div class="cb-dot"></div>💻 Developer</button>
+        <button class="cat-btn" onclick="catSelect(this,'seo-tools')" data-cat="seo-tools"><div class="cb-dot"></div>🔍 SEO</button>
+        <button class="cat-btn" onclick="catSelect(this,'website-tools')" data-cat="website-tools"><div class="cb-dot"></div>🌐 Website</button>
+        <button class="cat-btn" onclick="catSelect(this,'calculator-tools')" data-cat="calculator-tools"><div class="cb-dot"></div>🧮 Calculators</button>
+        <button class="cat-btn" onclick="catSelect(this,'social-tools')" data-cat="social-tools"><div class="cb-dot"></div>📱 Social Media</button>
+        <button class="cat-btn" onclick="catSelect(this,'file-tools')" data-cat="file-tools"><div class="cb-dot"></div>🗂 File Tools</button>
+        <button class="cat-btn" onclick="catSelect(this,'misc-tools')" data-cat="misc-tools"><div class="cb-dot"></div>⚙️ Misc</button>
+        <button class="cat-btn" onclick="catSelect(this,'advanced-tools')" data-cat="advanced-tools"><div class="cb-dot"></div>🚀 Advanced</button>
+      </div>
+    </div>
+    <div class="cat-no-result" id="catNoResult">
+      <h3>No Tools Found</h3>
+      <p>Try a different search term or select another category.</p>
+    </div>
 
     <!-- IMAGE TOOLS -->
     <div id="image-tools" class="cb rev">
@@ -1373,20 +1430,62 @@
   // ── Tool Search / Filter
   window.filterTools = function filterTools(query) {
     const q = query.toLowerCase().trim();
-    document.querySelectorAll('.tg').forEach(grid => {
+    // sync with catSearch
+    const catInput = document.getElementById('catSearch');
+    if(catInput && catInput.value !== query) catInput.value = query;
+    catFilter(query);
+  }
+
+  // ── Category select
+  let _activeCat = 'all';
+  let _activeQuery = '';
+
+  window.catSelect = function(btn, cat) {
+    _activeCat = cat;
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    applyFilter();
+    document.getElementById('all-tools').scrollIntoView({behavior:'smooth', block:'start'});
+  };
+
+  window.catFilter = function(query) {
+    _activeQuery = (query || '').toLowerCase().trim();
+    applyFilter();
+  };
+
+  function applyFilter() {
+    const q = _activeQuery;
+    const cat = _activeCat;
+    let totalVisible = 0;
+
+    document.querySelectorAll('.cb').forEach(block => {
+      const blockId = block.id;
+      // Category match
+      const catMatch = cat === 'all' || blockId === cat;
+      if (!catMatch) { block.style.display = 'none'; return; }
+
+      const grid = block.querySelector('.tg');
+      if (!grid) { block.style.display = catMatch ? '' : 'none'; return; }
+
       const cards = grid.querySelectorAll('.tc');
-      let any = false;
+      let anyVisible = false;
       cards.forEach(card => {
         const name = card.querySelector('.tc-name')?.textContent.toLowerCase() || '';
         const desc = card.querySelector('.tc-desc')?.textContent.toLowerCase() || '';
-        const match = !q || name.includes(q) || desc.includes(q);
-        card.style.display = match ? '' : 'none';
-        if (match) any = true;
+        const searchMatch = !q || name.includes(q) || desc.includes(q);
+        card.style.display = searchMatch ? '' : 'none';
+        if (searchMatch) { anyVisible = true; totalVisible++; }
       });
-      const block = grid.closest('.cb');
-      if (block) block.style.display = any || !q ? '' : 'none';
+      block.style.display = anyVisible ? '' : 'none';
     });
-    if (q) document.getElementById('all-tools').scrollIntoView({ behavior: 'smooth' });
+
+    // Update count
+    const countEl = document.getElementById('catCountNum');
+    if (countEl) countEl.textContent = totalVisible || ((!q && cat==='all') ? '120+' : totalVisible);
+
+    // No result notice
+    const noRes = document.getElementById('catNoResult');
+    if (noRes) noRes.style.display = totalVisible === 0 ? 'block' : 'none';
   }
 
   // ── Stagger hero cards
