@@ -15,6 +15,18 @@
       --muted:#6a6a88; --text:#eeeeff; --text-dim:#a0a0c0;
       --card-bg:#1e1e30;
     }
+
+    /* ── LIGHT MODE ── */
+    body.light-mode {
+      --bg:#f4f4f0; --surface:#ffffff; --surface2:#eeeee8;
+      --border:#d8d8cc; --border2:#bbbba8;
+      --accent:#7ab800; --accent2:#ff6b35;
+      --muted:#888878; --text:#1a1a18; --text-dim:#55554a;
+      --card-bg:#fafaf6;
+    }
+    body.light-mode header{background:rgba(244,244,240,.97);}
+    body.light-mode ::-webkit-scrollbar-track{background:var(--bg)}
+    body.light-mode select option{background:var(--surface2);color:var(--text)}
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     html{scroll-behavior:smooth}
     body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
@@ -29,6 +41,14 @@
     .logo-text span{color:var(--text)}
     .back-btn{font-family:'Space Mono',monospace;font-size:.7rem;letter-spacing:.06em;color:var(--text-dim);border:1px solid var(--border2);background:none;padding:.38rem .85rem;border-radius:4px;cursor:pointer;text-decoration:none;transition:all .2s;display:inline-flex;align-items:center;gap:.4rem}
     .back-btn:hover{color:var(--accent);border-color:var(--accent)}
+
+    /* Theme toggle */
+    .theme-toggle{width:44px;height:24px;background:var(--surface2);border:1px solid var(--border2);border-radius:12px;cursor:pointer;position:relative;transition:all .3s;flex-shrink:0;display:flex;align-items:center;padding:3px}
+    .theme-toggle::after{content:'';width:16px;height:16px;background:var(--accent);border-radius:50%;transition:transform .3s,background .3s;display:block}
+    body.light-mode .theme-toggle::after{transform:translateX(20px)}
+    .theme-toggle:hover{border-color:var(--accent)}
+    .theme-icon{font-size:.78rem;color:var(--text-dim);flex-shrink:0}
+    .theme-wrap{display:flex;align-items:center;gap:.5rem}
 
     /* TOOL PAGE */
     .tool-wrap{max-width:960px;margin:0 auto;padding:3rem 2rem 5rem}
@@ -135,6 +155,10 @@
       <span class="logo-text">ALL<span>TOOL</span>HUB</span>
     </a>
     <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back to All Tools</a>
+    <div class="theme-wrap">
+      <i class="fas fa-moon theme-icon" id="themeIcon"></i>
+      <button class="theme-toggle" id="themeToggle" title="Toggle Dark/Light Mode" aria-label="Toggle theme"></button>
+    </div>
   </div>
 </header>
 
@@ -143,6 +167,13 @@
 </div>
 
 <script>
+// ══════════════════════════════════════════════
+// API KEY CONFIGURATION
+// ⚠️  IMPORTANT: Apna naya Google API key yahan set karein.
+//     Purana key revoke ho chuka hai — Google Cloud Console se
+//     nayi restricted key banayein aur sirf yahan daalen.
+//     Kabhi bhi API key source code mein hardcode na karein!
+window.PAGESPEED_API_KEY = "YOUR_NEW_GOOGLE_API_KEY_HERE";
 // ══════════════════════════════════════════════
 // TOOL DEFINITIONS
 // ══════════════════════════════════════════════
@@ -2013,7 +2044,8 @@ const TOOLS = {
   'screenshot-to-pdf': {
     title: 'Screenshot to PDF', cat: 'Advanced Tools', catLink: '#advanced-tools',
     desc: 'Convert screenshots or images into a multi-page PDF document.',
-    render: () => fileUploadTool('Screenshot to PDF', '📸→📄', 'image/*', 'Convert to PDF', 'Selected images will be combined into a PDF', true)
+    render: () => `<div class="tool-box"><h3>Upload Screenshots / Images</h3><div class="drop-zone" onclick="document.getElementById('s2pInput').click()"><div class="drop-icon">📸→📄</div><div class="drop-text"><strong>Click to upload images</strong><br>Select multiple — each becomes a PDF page</div><input type="file" id="s2pInput" accept="image/*" multiple style="display:none" onchange="showFileName(this,'s2pName');document.getElementById('s2pBtn').style.display='flex'"></div><div id="s2pName" style="margin-top:.5rem;font-size:.8rem;color:var(--text-dim)"></div><div class="btn-row" id="s2pBtn" style="display:none"><button class="btn" onclick="screenshotsToPDF(document.getElementById('s2pInput'))"><i class="fas fa-file-pdf"></i> Convert to PDF</button></div><div id="s2pResult" style="margin-top:1rem"></div></div>`,
+    init: () => {}
   },
 
   // ── WEBSITE TOOLS (real free APIs — no backend needed)
@@ -2119,7 +2151,7 @@ const TOOLS = {
     title:'Page Speed Checker', cat:'SEO Tools', catLink:'#seo-tools',
     desc:'Test website loading speed using Google PageSpeed Insights API.',
     render: () => `<div class="tool-box"><h3>Enter Website URL</h3><input type="url" id="psUrl" placeholder="https://example.com"><div class="row2" style="margin-top:.8rem"><div><label>Device</label><select id="psDevice"><option value="mobile">Mobile</option><option value="desktop">Desktop</option></select></div></div><div class="btn-row"><button class="btn" onclick="checkPageSpeed()"><i class="fas fa-search"></i> ⚡ Check Speed</button></div><div id="psResult" style="margin-top:1rem"></div></div>`,
-    init: () => { window.checkPageSpeed=async()=>{ const url=document.getElementById('psUrl').value.trim(); if(!url){alert('Enter a URL');return;} const device=document.getElementById('psDevice').value; const res=document.getElementById('psResult'); res.innerHTML='<div class="notice">⏳ Running PageSpeed test (may take 10–20 sec)...</div>'; try{ const apiUrl=`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=${device}&key=AIzaSyAa8yy0GdcGPHdtD083HiGGx_S0vMPScDM`; const r=await fetch(apiUrl); const d=await r.json(); if(d.error){throw new Error(d.error.message);} const cats=d.lighthouseResult?.categories; const perf=Math.round((cats?.performance?.score||0)*100); const acc=Math.round((cats?.accessibility?.score||0)*100); const seo=Math.round((cats?.seo?.score||0)*100); const bp=Math.round((cats?.['best-practices']?.score||0)*100); const color=s=>s>=90?'#68D391':s>=50?'var(--accent)':'#FC8181'; res.innerHTML=`<div class="stats-row" style="flex-wrap:wrap;gap:.5rem">${[['⚡ Performance',perf],['♿ Accessibility',acc],['🔍 SEO',seo],['✅ Best Practices',bp]].map(([l,v])=>`<div class="stat-box" style="flex:1;min-width:120px"><div class="stat-val" style="color:${color(v)}">${v}</div><div class="stat-lbl">${l}</div></div>`).join('')}</div><div class="notice" style="margin-top:.8rem">Scores: ✅ 90-100 Good | ⚠️ 50-89 Average | ❌ 0-49 Poor<br><a href="https://pagespeed.web.dev/report?url=${encodeURIComponent(url)}" target="_blank" style="color:var(--accent)">→ Full Report on PageSpeed Insights</a></div>`; }catch(e){ res.innerHTML=`<div class="notice">⚠️ API limit reached or error. Use <a href="https://pagespeed.web.dev/?url=${encodeURIComponent(url)}" target="_blank" style="color:var(--accent)">pagespeed.web.dev</a> directly.</div>`; } }; }
+    init: () => { window.checkPageSpeed=async()=>{ const url=document.getElementById('psUrl').value.trim(); if(!url){alert('Enter a URL');return;} const device=document.getElementById('psDevice').value; const res=document.getElementById('psResult'); res.innerHTML='<div class="notice">⏳ Running PageSpeed test (may take 10–20 sec)...</div>'; try{ const apiUrl=`https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=${device}&key=${window.PAGESPEED_API_KEY||''}`; const r=await fetch(apiUrl); const d=await r.json(); if(d.error){throw new Error(d.error.message);} const cats=d.lighthouseResult?.categories; const perf=Math.round((cats?.performance?.score||0)*100); const acc=Math.round((cats?.accessibility?.score||0)*100); const seo=Math.round((cats?.seo?.score||0)*100); const bp=Math.round((cats?.['best-practices']?.score||0)*100); const color=s=>s>=90?'#68D391':s>=50?'var(--accent)':'#FC8181'; res.innerHTML=`<div class="stats-row" style="flex-wrap:wrap;gap:.5rem">${[['⚡ Performance',perf],['♿ Accessibility',acc],['🔍 SEO',seo],['✅ Best Practices',bp]].map(([l,v])=>`<div class="stat-box" style="flex:1;min-width:120px"><div class="stat-val" style="color:${color(v)}">${v}</div><div class="stat-lbl">${l}</div></div>`).join('')}</div><div class="notice" style="margin-top:.8rem">Scores: ✅ 90-100 Good | ⚠️ 50-89 Average | ❌ 0-49 Poor<br><a href="https://pagespeed.web.dev/report?url=${encodeURIComponent(url)}" target="_blank" style="color:var(--accent)">→ Full Report on PageSpeed Insights</a></div>`; }catch(e){ res.innerHTML=`<div class="notice">⚠️ API limit reached or error. Use <a href="https://pagespeed.web.dev/?url=${encodeURIComponent(url)}" target="_blank" style="color:var(--accent)">pagespeed.web.dev</a> directly.</div>`; } }; }
   },
 
   // Social & File (show UI placeholders)
@@ -2150,27 +2182,67 @@ const TOOLS = {
   },
 
   'instagram-dl': {
-    title:'Instagram Photo Downloader', cat:'Social Media Tools', catLink:'#social-tools',
-    desc:'Download Instagram photos and reels by pasting the post URL.',
-    render: () => `<div class="tool-box"><h3>Enter Instagram Post URL</h3><input type="url" id="igUrl" placeholder="https://www.instagram.com/p/..."><div class="btn-row"><button class="btn" onclick="showComingSoon('Instagram Downloader')"><i class="fas fa-download"></i> Download</button></div><div class="notice" style="margin-top:1rem">⚠️ <strong>Instagram restricts direct downloads.</strong> Use browser extensions like "InstaSave" or online tools like <a href="https://snapinsta.app" target="_blank" style="color:var(--accent)">SnapInsta.app</a> for reliable downloads.</div></div>`
+    title:'Instagram Photo/Reel Downloader', cat:'Social Media Tools', catLink:'#social-tools',
+    desc:'Download Instagram photos, reels and videos by pasting the post URL.',
+    render: () => `<div class="tool-box">
+      <h3>Instagram Downloader</h3>
+      <label for="igUrl">Post / Reel / Story URL</label>
+      <input type="url" id="igUrl" placeholder="https://www.instagram.com/p/ABC123...">
+      <div class="btn-row">
+        <button class="btn" onclick="socialLaunch('ig')"><i class="fas fa-download"></i> Download Now</button>
+        <button class="btn btn-outline" onclick="socialCopy('igUrl')"><i class="fas fa-copy"></i> Copy URL</button>
+      </div>
+      <div id="igResult" style="margin-top:1.2rem"></div>
+    </div>`,
+    init: () => {}
   },
 
   'tiktok-dl': {
     title:'TikTok Video Downloader', cat:'Social Media Tools', catLink:'#social-tools',
-    desc:'Download TikTok videos without watermark.',
-    render: () => `<div class="tool-box"><h3>Enter TikTok Video URL</h3><input type="url" id="ttUrl" placeholder="https://www.tiktok.com/@user/video/..."><div class="btn-row"><button class="btn" onclick="showComingSoon('TikTok Downloader')"><i class="fas fa-download"></i> Download</button></div><div class="notice" style="margin-top:1rem">⚠️ <strong>TikTok restricts direct downloads.</strong> Use <a href="https://snaptik.app" target="_blank" style="color:var(--accent)">SnapTik.app</a> or <a href="https://ssstik.io" target="_blank" style="color:var(--accent)">ssstik.io</a> for watermark-free downloads.</div></div>`
+    desc:'Download TikTok videos without watermark using free API.',
+    render: () => `<div class="tool-box">
+      <h3>TikTok Downloader — No Watermark</h3>
+      <label for="ttUrl">TikTok Video URL</label>
+      <input type="url" id="ttUrl" placeholder="https://www.tiktok.com/@user/video/123...  or  https://vm.tiktok.com/...">
+      <div class="btn-row">
+        <button class="btn" id="ttBtn" onclick="tiktokDownload()"><i class="fas fa-download"></i> Fetch Video</button>
+        <button class="btn btn-outline" onclick="socialCopy('ttUrl')"><i class="fas fa-copy"></i> Copy URL</button>
+      </div>
+      <div id="ttResult" style="margin-top:1.2rem"></div>
+    </div>`,
+    init: () => {}
   },
 
   'twitter-dl': {
     title:'Twitter / X Video Downloader', cat:'Social Media Tools', catLink:'#social-tools',
     desc:'Download videos from X (Twitter) tweets.',
-    render: () => `<div class="tool-box"><h3>Enter Tweet URL</h3><input type="url" id="twUrl" placeholder="https://twitter.com/user/status/..."><div class="btn-row"><button class="btn" onclick="showComingSoon('Twitter Downloader')"><i class="fas fa-download"></i> Download</button></div><div class="notice" style="margin-top:1rem">⚠️ <strong>Twitter API required.</strong> Use <a href="https://twittervideodownloader.com" target="_blank" style="color:var(--accent)">twittervideodownloader.com</a> as alternative.</div></div>`
+    render: () => `<div class="tool-box">
+      <h3>Twitter / X Downloader</h3>
+      <label for="twUrl">Tweet URL</label>
+      <input type="url" id="twUrl" placeholder="https://twitter.com/user/status/123...  or  https://x.com/...">
+      <div class="btn-row">
+        <button class="btn" onclick="socialLaunch('tw')"><i class="fas fa-download"></i> Download Now</button>
+        <button class="btn btn-outline" onclick="socialCopy('twUrl')"><i class="fas fa-copy"></i> Copy URL</button>
+      </div>
+      <div id="twResult" style="margin-top:1.2rem"></div>
+    </div>`,
+    init: () => {}
   },
 
   'facebook-dl': {
     title:'Facebook Video Downloader', cat:'Social Media Tools', catLink:'#social-tools',
     desc:'Download Facebook videos in HD or SD from any public post.',
-    render: () => `<div class="tool-box"><h3>Enter Facebook Video URL</h3><input type="url" id="fbUrl" placeholder="https://www.facebook.com/watch?v=..."><div class="btn-row"><button class="btn" onclick="showComingSoon('Facebook Downloader')"><i class="fas fa-download"></i> Download</button></div><div class="notice" style="margin-top:1rem">⚠️ <strong>Facebook restricts direct downloads.</strong> Use <a href="https://fdown.net" target="_blank" style="color:var(--accent)">fdown.net</a> or <a href="https://fbdownloader.app" target="_blank" style="color:var(--accent)">fbdownloader.app</a> as alternative.</div></div>`
+    render: () => `<div class="tool-box">
+      <h3>Facebook Video Downloader</h3>
+      <label for="fbUrl">Facebook Video / Watch URL</label>
+      <input type="url" id="fbUrl" placeholder="https://www.facebook.com/watch?v=...  or  /videos/...">
+      <div class="btn-row">
+        <button class="btn" onclick="socialLaunch('fb')"><i class="fas fa-download"></i> Download Now</button>
+        <button class="btn btn-outline" onclick="socialCopy('fbUrl')"><i class="fas fa-copy"></i> Copy URL</button>
+      </div>
+      <div id="fbResult" style="margin-top:1.2rem"></div>
+    </div>`,
+    init: () => {}
   },
 
   // ── FILE TOOLS
@@ -2272,47 +2344,217 @@ const TOOLS = {
   'audio-converter': {
     title:'Audio Converter', cat:'File Tools', catLink:'#file-tools',
     desc:'Convert audio files between MP3, WAV, OGG, FLAC, and more.',
-    render: () => `<div class="tool-box"><h3>Upload Audio File</h3><div class="drop-zone" onclick="document.getElementById('acIn').click()"><div class="drop-icon">🎵</div><div class="drop-text"><strong>Click to upload audio file</strong><br>MP3, WAV, OGG, FLAC, AAC</div><input type="file" id="acIn" accept="audio/*" style="display:none" onchange="showFileName(this,'acName')"></div><div id="acName" style="margin-top:.5rem;font-size:.8rem;color:var(--text-dim)"></div><div style="margin-top:.8rem"><label>Convert To</label><select id="acTo"><option value="mp3">MP3</option><option value="wav">WAV</option><option value="ogg">OGG</option></select></div><div class="btn-row"><button class="btn" onclick="showComingSoon('Audio Converter')"><i class="fas fa-exchange-alt"></i> Convert Audio</button></div><div class="notice" style="margin-top:1rem">🔌 Audio conversion needs <strong>FFmpeg WebAssembly</strong>. Use <a href="https://cloudconvert.com" target="_blank" style="color:var(--accent)">CloudConvert.com</a> for free audio conversion.</div></div>`
+    render: () => `<div class="tool-box"><h3>Upload Audio File</h3><div class="drop-zone" onclick="document.getElementById('acIn').click()"><div class="drop-icon">🎵</div><div class="drop-text"><strong>Click to upload audio file</strong><br>MP3, WAV, OGG, FLAC, AAC</div><input type="file" id="acIn" accept="audio/*" style="display:none" onchange="loadAudioPreview(this)"></div><div id="acName" style="margin-top:.5rem;font-size:.8rem;color:var(--text-dim)"></div><div id="acPlayer" style="margin-top:.5rem"></div><div style="margin-top:.8rem"><label>Convert To</label><select id="acTo"><option value="wav">WAV</option><option value="ogg">OGG (WebM)</option><option value="mp3">MP3 (via WAV)</option></select></div><div class="btn-row"><button class="btn" onclick="convertAudio()"><i class="fas fa-exchange-alt"></i> Convert Audio</button></div><div id="acResult" style="margin-top:1rem"></div><div class="notice" style="margin-top:.5rem">✅ 100% browser — no upload, no server.</div></div>`,
+    init: () => {
+      window.loadAudioPreview = (input) => {
+        const file = input.files[0]; if(!file) return;
+        document.getElementById('acName').textContent = file.name + ' (' + (file.size/1024).toFixed(0) + ' KB)';
+        const url = URL.createObjectURL(file);
+        document.getElementById('acPlayer').innerHTML = `<audio controls style="width:100%"><source src="${url}"></audio>`;
+      };
+      window.convertAudio = async () => {
+        const input = document.getElementById('acIn');
+        const file = input.files[0]; if(!file){ alert('Upload an audio file first'); return; }
+        const to = document.getElementById('acTo').value;
+        const res = document.getElementById('acResult');
+        res.innerHTML = '<div class="notice">⏳ Converting via Web Audio API...</div>';
+        try {
+          const ctx = new (window.AudioContext || window.webkitAudioContext)();
+          const ab = await file.arrayBuffer();
+          const audioBuffer = await ctx.decodeAudioData(ab);
+          if(to === 'wav' || to === 'mp3') {
+            const wav = bufferToWav(audioBuffer);
+            const url = URL.createObjectURL(wav);
+            const ext = to === 'mp3' ? 'wav' : 'wav';
+            res.innerHTML = `<div class="notice">✅ Converted! (WAV format — universally supported)<br><small>True MP3 encoding needs a server.</small></div><audio controls style="width:100%;margin-top:.5rem"><source src="${url}"></audio><div class="btn-row" style="margin-top:.8rem"><a href="${url}" download="converted.wav" class="btn">⬇ Download WAV</a></div>`;
+          } else if(to === 'ogg') {
+            const stream = new MediaStream();
+            const offline = new OfflineAudioContext(audioBuffer.numberOfChannels, audioBuffer.length, audioBuffer.sampleRate);
+            const src2 = offline.createBufferSource(); src2.buffer = audioBuffer; src2.connect(offline.destination); src2.start();
+            const renderedBuffer = await offline.startRendering();
+            const wav2 = bufferToWav(renderedBuffer);
+            const url2 = URL.createObjectURL(wav2);
+            res.innerHTML = `<div class="notice">✅ Converted to WAV (OGG encoding is browser-restricted).</div><audio controls style="width:100%;margin-top:.5rem"><source src="${url2}"></audio><div class="btn-row" style="margin-top:.8rem"><a href="${url2}" download="converted.wav" class="btn">⬇ Download WAV</a></div>`;
+          }
+        } catch(e) { res.innerHTML = `<div class="notice">❌ ${e.message}</div>`; }
+      };
+    }
   },
 
   'video-converter': {
     title:'Video Converter', cat:'File Tools', catLink:'#file-tools',
     desc:'Convert videos to MP4, AVI, MOV, MKV, and other formats.',
-    render: () => `<div class="tool-box"><h3>Upload Video File</h3><div class="drop-zone" onclick="document.getElementById('vcIn').click()"><div class="drop-icon">🎬</div><div class="drop-text"><strong>Click to upload video</strong><br>MP4, AVI, MOV, MKV, WebM</div><input type="file" id="vcIn" accept="video/*" style="display:none" onchange="showFileName(this,'vcName')"></div><div id="vcName" style="margin-top:.5rem;font-size:.8rem;color:var(--text-dim)"></div><div style="margin-top:.8rem"><label>Convert To</label><select id="vcTo"><option>MP4</option><option>WebM</option><option>MOV</option><option>AVI</option></select></div><div class="btn-row"><button class="btn" onclick="showComingSoon('Video Converter')"><i class="fas fa-exchange-alt"></i> Convert Video</button></div><div class="notice" style="margin-top:1rem">🔌 Video conversion requires <strong>FFmpeg</strong> server-side processing. Use <a href="https://cloudconvert.com" target="_blank" style="color:var(--accent)">CloudConvert.com</a> for free video conversion.</div></div>`
+    render: () => `<div class="tool-box"><h3>Upload Video File</h3><div class="drop-zone" onclick="document.getElementById('vcIn').click()"><div class="drop-icon">🎬</div><div class="drop-text"><strong>Click to upload video</strong><br>MP4, WebM, MOV, AVI, MKV</div><input type="file" id="vcIn" accept="video/*" style="display:none" onchange="loadVideoPreview('vcIn','vcPreview','vcName')"></div><div id="vcName" style="margin-top:.5rem;font-size:.8rem;color:var(--text-dim)"></div><div id="vcPreview" style="margin-top:.5rem"></div><div style="margin-top:.8rem"><label>Convert To</label><select id="vcTo"><option value="video/webm">WebM (browser-native)</option><option value="video/mp4">MP4</option></select></div><div class="row2" style="margin-top:.8rem"><div><label>Video Bitrate (kbps)</label><input type="number" id="vcBitrate" value="2500" min="500" max="10000"></div><div><label>Audio Bitrate (kbps)</label><input type="number" id="vcABitrate" value="128" min="64" max="320"></div></div><div class="btn-row"><button class="btn" onclick="convertVideo()"><i class="fas fa-exchange-alt"></i> Convert Video</button></div><div id="vcResult" style="margin-top:1rem"></div><div class="notice" style="margin-top:.5rem">✅ 100% browser using MediaRecorder API.</div></div>`,
+    init: () => {
+      window.loadVideoPreview = (inputId, previewId, nameId) => {
+        const file = document.getElementById(inputId).files[0]; if(!file) return;
+        if(nameId) document.getElementById(nameId).textContent = file.name + ' (' + (file.size/1024/1024).toFixed(1) + ' MB)';
+        const url = URL.createObjectURL(file);
+        document.getElementById(previewId).innerHTML = `<video controls style="max-width:100%;border-radius:8px;max-height:180px"><source src="${url}"></video>`;
+      };
+      window.convertVideo = () => {
+        const file = document.getElementById('vcIn').files[0]; if(!file){ alert('Upload a video first'); return; }
+        const mimeType = document.getElementById('vcTo').value;
+        const res = document.getElementById('vcResult');
+        const vBit = parseInt(document.getElementById('vcBitrate').value)*1000;
+        const aBit = parseInt(document.getElementById('vcABitrate').value)*1000;
+        if(!MediaRecorder.isTypeSupported(mimeType)) {
+          res.innerHTML = `<div class="notice">⚠️ Your browser does not support ${mimeType} encoding. Try WebM format.</div>`; return;
+        }
+        res.innerHTML = '<div class="notice">⏳ Converting... (plays through once, then downloads)</div>';
+        const video = document.createElement('video'); video.muted = true;
+        const url = URL.createObjectURL(file); video.src = url; video.load();
+        video.oncanplay = () => {
+          const canvas = document.createElement('canvas');
+          video.play().then(() => {
+            canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            const stream = canvas.captureStream(30);
+            const chunks = []; const mr = new MediaRecorder(stream, {mimeType, videoBitsPerSecond:vBit, audioBitsPerSecond:aBit});
+            mr.ondataavailable = e => { if(e.data.size) chunks.push(e.data); };
+            mr.onstop = () => {
+              const blob = new Blob(chunks, {type:mimeType});
+              const ext = mimeType.includes('webm')?'webm':'mp4';
+              const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`converted.${ext}`; a.click();
+              res.innerHTML = `<div class="notice">✅ Converted! (${(blob.size/1024/1024).toFixed(1)} MB) — download started.</div>`;
+              video.pause();
+            };
+            mr.start();
+            const drawFrame = () => { if(video.ended||video.paused){mr.stop();return;} ctx.drawImage(video,0,0); requestAnimationFrame(drawFrame); };
+            drawFrame();
+            video.onended = () => mr.stop();
+          });
+        };
+      };
+    }
   },
 
   'video-compressor': {
     title:'Video Compressor', cat:'File Tools', catLink:'#file-tools',
     desc:'Reduce video file size for easier sharing and uploading.',
-    render: () => `<div class="tool-box"><h3>Upload Video</h3><div class="drop-zone" onclick="document.getElementById('vcoIn').click()"><div class="drop-icon">📹</div><div class="drop-text"><strong>Click to upload video</strong></div><input type="file" id="vcoIn" accept="video/*" style="display:none" onchange="showFileName(this,'vcoName')"></div><div id="vcoName" style="margin-top:.5rem;font-size:.8rem;color:var(--text-dim)"></div><div style="margin-top:.8rem"><label>Compression Level</label><select id="vcoLevel"><option>Low (Better Quality)</option><option selected>Medium (Balanced)</option><option>High (Smaller Size)</option></select></div><div class="btn-row"><button class="btn" onclick="showComingSoon('Video Compressor')"><i class="fas fa-compress-alt"></i> Compress Video</button></div><div class="notice" style="margin-top:1rem">🔌 Video compression needs FFmpeg. Use <a href="https://www.veed.io" target="_blank" style="color:var(--accent)">VEED.io</a> or <a href="https://handbrake.fr" target="_blank" style="color:var(--accent)">HandBrake</a> for local compression.</div></div>`
+    render: () => `<div class="tool-box"><h3>Upload Video</h3><div class="drop-zone" onclick="document.getElementById('vcoIn').click()"><div class="drop-icon">📹</div><div class="drop-text"><strong>Click to upload video</strong><br>MP4, WebM, MOV, AVI</div><input type="file" id="vcoIn" accept="video/*" style="display:none" onchange="loadVideoPreview('vcoIn','vcoPreview','vcoName')"></div><div id="vcoName" style="margin-top:.5rem;font-size:.8rem;color:var(--text-dim)"></div><div id="vcoPreview" style="margin-top:.5rem"></div><div style="margin-top:.8rem"><label>Compression Level</label><select id="vcoLevel"><option value="4000000">Low (Better Quality ~4Mbps)</option><option value="1500000" selected>Medium (Balanced ~1.5Mbps)</option><option value="600000">High (Smaller Size ~600kbps)</option></select></div><div class="btn-row"><button class="btn" onclick="compressVideo()"><i class="fas fa-compress-alt"></i> Compress Video</button></div><div id="vcoResult" style="margin-top:1rem"></div><div class="notice" style="margin-top:.5rem">✅ 100% browser — plays through once then downloads.</div></div>`,
+    init: () => {
+      window.compressVideo = () => {
+        const file = document.getElementById('vcoIn').files[0]; if(!file){ alert('Upload a video first'); return; }
+        const bitrate = parseInt(document.getElementById('vcoLevel').value);
+        const res = document.getElementById('vcoResult');
+        const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm';
+        res.innerHTML = `<div class="notice">⏳ Compressing (${(bitrate/1000000).toFixed(1)} Mbps)... video plays then downloads.</div>`;
+        const video = document.createElement('video'); video.muted = true;
+        video.src = URL.createObjectURL(file); video.load();
+        video.oncanplay = () => {
+          const canvas = document.createElement('canvas');
+          video.play().then(() => {
+            canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            const stream = canvas.captureStream(30);
+            const chunks = []; const mr = new MediaRecorder(stream, {mimeType, videoBitsPerSecond:bitrate});
+            mr.ondataavailable = e => { if(e.data.size) chunks.push(e.data); };
+            mr.onstop = () => {
+              const blob = new Blob(chunks, {type:mimeType});
+              const origMB = (file.size/1024/1024).toFixed(1);
+              const newMB = (blob.size/1024/1024).toFixed(1);
+              const saved = Math.max(0,(((file.size-blob.size)/file.size)*100).toFixed(0));
+              const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='compressed.webm'; a.click();
+              res.innerHTML = `<div class="stats-row"><div class="stat-box"><div class="stat-val">${origMB} MB</div><div class="stat-lbl">Original</div></div><div class="stat-box"><div class="stat-val" style="color:var(--accent)">${newMB} MB</div><div class="stat-lbl">Compressed</div></div><div class="stat-box"><div class="stat-val" style="color:#68D391">${saved}%</div><div class="stat-lbl">Saved</div></div></div><div class="notice" style="margin-top:.8rem">✅ Download started!</div>`;
+              video.pause();
+            };
+            mr.start(); const drawFrame = () => { if(video.ended||video.paused){mr.stop();return;} ctx.drawImage(video,0,0); requestAnimationFrame(drawFrame); }; drawFrame();
+            video.onended = () => mr.stop();
+          });
+        };
+      };
+    }
   },
 
   'mp3-cutter': {
     title:'MP3 Cutter', cat:'File Tools', catLink:'#file-tools',
     desc:'Trim or cut MP3 audio files to any start and end point online.',
-    render: () => `<div class="tool-box"><h3>Upload MP3 File</h3><div class="drop-zone" onclick="document.getElementById('mpIn').click()"><div class="drop-icon">✂️🎵</div><div class="drop-text"><strong>Click to upload MP3</strong></div><input type="file" id="mpIn" accept="audio/*" style="display:none" onchange="loadMP3(this)"></div><div id="mpPlayer" style="margin-top:1rem"></div><div class="row2" style="margin-top:1rem"><div><label>Start Time (seconds)</label><input type="number" id="mpStart" value="0" min="0"></div><div><label>End Time (seconds)</label><input type="number" id="mpEnd" value="30" min="1"></div></div><div class="btn-row"><button class="btn" onclick="showComingSoon('MP3 Cutter')"><i class="fas fa-bolt"></i> Cut Audio</button></div><div class="notice" style="margin-top:1rem">🔌 Audio cutting needs <strong>Web Audio API + encoding</strong>. Use <a href="https://mp3cut.net" target="_blank" style="color:var(--accent)">mp3cut.net</a> as a free alternative.</div></div>`,
+    render: () => `<div class="tool-box"><h3>Upload MP3 File</h3><div class="drop-zone" onclick="document.getElementById('mpIn').click()"><div class="drop-icon">✂️🎵</div><div class="drop-text"><strong>Click to upload MP3</strong></div><input type="file" id="mpIn" accept="audio/*" style="display:none" onchange="loadMP3(this)"></div><div id="mpPlayer" style="margin-top:1rem"></div><div class="row2" style="margin-top:1rem"><div><label>Start Time (seconds)</label><input type="number" id="mpStart" value="0" min="0"></div><div><label>End Time (seconds)</label><input type="number" id="mpEnd" value="30" min="1"></div></div><div class="btn-row"><button class="btn" onclick="cutMP3()"><i class="fas fa-bolt"></i> Cut Audio</button></div><div id="mpCutResult" style="margin-top:1rem"></div></div>`,
     init: () => { window.loadMP3 = (input) => { const file=input.files[0]; if(!file) return; const url=URL.createObjectURL(file); document.getElementById('mpPlayer').innerHTML=`<audio controls style="width:100%;margin-top:.5rem"><source src="${url}"></audio>`; }; }
   },
 
   'video-to-gif': {
     title:'Video to GIF Converter', cat:'File Tools', catLink:'#file-tools',
     desc:'Convert a video clip or portion into an animated GIF.',
-    render: () => `<div class="tool-box"><h3>Upload Video</h3><div class="drop-zone" onclick="document.getElementById('vtgIn').click()"><div class="drop-icon">🎬→🎞️</div><div class="drop-text"><strong>Click to upload video</strong><br>MP4, WebM, MOV</div><input type="file" id="vtgIn" accept="video/*" style="display:none" onchange="loadVTG(this)"></div><div id="vtgPreview" style="margin-top:1rem"></div><div class="row2" style="margin-top:1rem"><div><label>Start (sec)</label><input type="number" id="vtgS" value="0" min="0"></div><div><label>Duration (sec)</label><input type="number" id="vtgD" value="5" min="1" max="30"></div><div><label>Width (px)</label><input type="number" id="vtgW" value="480"></div><div><label>FPS</label><input type="number" id="vtgFPS" value="10" min="5" max="30"></div></div><div class="btn-row"><button class="btn" onclick="showComingSoon('Video to GIF')"><i class="fas fa-exchange-alt"></i> Convert to GIF</button></div><div class="notice" style="margin-top:1rem">🔌 GIF encoding needs FFmpeg. Use <a href="https://ezgif.com/video-to-gif" target="_blank" style="color:var(--accent)">ezgif.com</a> for free conversion.</div></div>`,
-    init: () => { window.loadVTG = (input) => { const file=input.files[0]; if(!file) return; const url=URL.createObjectURL(file); document.getElementById('vtgPreview').innerHTML=`<video controls style="max-width:100%;border-radius:8px"><source src="${url}"></video>`; }; }
+    render: () => `<div class="tool-box"><h3>Upload Video</h3><div class="drop-zone" onclick="document.getElementById('vtgIn').click()"><div class="drop-icon">🎬→🎞️</div><div class="drop-text"><strong>Click to upload video</strong><br>MP4, WebM, MOV</div><input type="file" id="vtgIn" accept="video/*" style="display:none" onchange="loadVTG(this)"></div><div id="vtgPreview" style="margin-top:1rem"></div><div class="row2" style="margin-top:1rem"><div><label>Start (sec)</label><input type="number" id="vtgS" value="0" min="0"></div><div><label>Duration (sec)</label><input type="number" id="vtgD" value="5" min="1" max="30"></div><div><label>Width (px)</label><input type="number" id="vtgW" value="480"></div><div><label>FPS</label><input type="number" id="vtgFPS" value="10" min="5" max="30"></div></div><div class="btn-row"><button class="btn" onclick="videoToGIF()"><i class="fas fa-exchange-alt"></i> Convert to GIF</button></div><div id="vtgResult" style="margin-top:1rem"></div></div>`,
+    init: () => {
+      window.loadVTG = (input) => { const file=input.files[0]; if(!file) return; const url=URL.createObjectURL(file); document.getElementById('vtgPreview').innerHTML=`<video controls style="max-width:100%;border-radius:8px;max-height:180px"><source src="${url}"></video>`; };
+      window.videoToGIF = () => {
+        const file = document.getElementById('vtgIn').files[0]; if(!file){ alert('Upload a video first'); return; }
+        const startSec = parseFloat(document.getElementById('vtgS').value)||0;
+        const durSec = Math.min(30, parseFloat(document.getElementById('vtgD').value)||5);
+        const width = parseInt(document.getElementById('vtgW').value)||480;
+        const fps = parseInt(document.getElementById('vtgFPS').value)||10;
+        const res = document.getElementById('vtgResult');
+        res.innerHTML = '<div class="notice">⏳ Extracting frames...</div>';
+        const loadGifJS = (cb) => { if(window.GIF){cb();return;} const s=document.createElement('script'); s.src='https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js'; s.onload=cb; s.onerror=()=>{res.innerHTML='<div class="notice">❌ Could not load gif.js library.</div>';}; document.head.appendChild(s); };
+        const video = document.createElement('video'); video.src = URL.createObjectURL(file); video.muted = true; video.load();
+        video.oncanplay = () => {
+          video.currentTime = startSec;
+          video.onseeked = () => {
+            const height = Math.round(video.videoHeight * width / video.videoWidth);
+            const canvas = document.createElement('canvas'); canvas.width=width; canvas.height=height;
+            const ctx = canvas.getContext('2d');
+            const totalFrames = Math.round(fps * durSec);
+            const interval = 1000 / fps;
+            loadGifJS(() => {
+              const gif = new GIF({workers:2, quality:8, width, height, repeat:0});
+              let frame = 0;
+              const captureFrame = () => {
+                if(frame >= totalFrames){ gif.render(); res.innerHTML='<div class="notice">⏳ Encoding GIF... please wait</div>'; return; }
+                video.currentTime = startSec + (frame / fps);
+                video.onseeked = () => { ctx.drawImage(video,0,0,width,height); gif.addFrame(ctx,{copy:true,delay:interval}); frame++; captureFrame(); };
+              };
+              gif.on('finished', blob => {
+                const url = URL.createObjectURL(blob);
+                res.innerHTML = `<div class="notice">✅ GIF created! (${(blob.size/1024).toFixed(0)} KB, ${totalFrames} frames @ ${fps}fps)</div><img src="${url}" style="max-width:100%;border-radius:8px;margin-top:.8rem"><div class="btn-row" style="margin-top:1rem"><a href="${url}" download="video.gif" class="btn">⬇ Download GIF</a></div>`;
+              });
+              captureFrame();
+            });
+          };
+        };
+      };
+    }
   },
 
   'gif-maker': {
     title:'GIF Maker', cat:'File Tools', catLink:'#file-tools',
     desc:'Create animated GIFs from a series of uploaded images.',
-    render: () => `<div class="tool-box"><h3>Upload Images (Select Multiple)</h3><div class="drop-zone" onclick="document.getElementById('gmIn').click()"><div class="drop-icon">🖼️🎞️</div><div class="drop-text"><strong>Click to upload images</strong><br>Select multiple images — they will become GIF frames</div><input type="file" id="gmIn" accept="image/*" multiple style="display:none" onchange="loadGMImages(this)"></div><div id="gmFrames" style="margin-top:1rem;display:flex;flex-wrap:wrap;gap:.5rem"></div><div class="row2" style="margin-top:1rem"><div><label>Frame Delay (ms)</label><input type="number" id="gmDelay" value="200" min="50"></div><div><label>Loop</label><select id="gmLoop"><option value="0">Infinite</option><option value="1">Once</option><option value="3">3 Times</option></select></div></div><div class="btn-row"><button class="btn" onclick="showComingSoon('GIF Maker')"><i class="fas fa-plus-circle"></i> Create GIF</button></div><div class="notice" style="margin-top:1rem">🔌 GIF creation needs a library. Use <a href="https://ezgif.com/maker" target="_blank" style="color:var(--accent)">ezgif.com/maker</a> for free GIF creation.</div></div>`,
-    init: () => { window.loadGMImages = (input) => { const frames=document.getElementById('gmFrames'); frames.innerHTML=''; Array.from(input.files).forEach((f,i)=>{ const url=URL.createObjectURL(f); frames.innerHTML+=`<div style="position:relative"><img src="${url}" style="width:80px;height:60px;object-fit:cover;border-radius:6px;border:2px solid var(--border2)"><span style="position:absolute;top:2px;left:4px;font-size:.6rem;color:white;background:rgba(0,0,0,.6);padding:1px 4px;border-radius:3px">${i+1}</span></div>`; }); }; }
+    render: () => `<div class="tool-box"><h3>Upload Images (Select Multiple)</h3><div class="drop-zone" onclick="document.getElementById('gmIn').click()"><div class="drop-icon">🖼️🎞️</div><div class="drop-text"><strong>Click to upload images</strong><br>Select multiple images — they will become GIF frames</div><input type="file" id="gmIn" accept="image/*" multiple style="display:none" onchange="loadGMImages(this)"></div><div id="gmFrames" style="margin-top:1rem;display:flex;flex-wrap:wrap;gap:.5rem"></div><div class="row2" style="margin-top:1rem"><div><label>Frame Delay (ms)</label><input type="number" id="gmDelay" value="200" min="50"></div><div><label>Loop</label><select id="gmLoop"><option value="0">Infinite</option><option value="1">Once</option><option value="3">3 Times</option></select></div></div><div class="btn-row"><button class="btn" onclick="makeGIF()"><i class="fas fa-plus-circle"></i> Create GIF</button></div><div id="gmResult" style="margin-top:1rem"></div></div>`,
+    init: () => { window.loadGMImages = (input) => { window._gifFrameFiles=Array.from(input.files); const frames=document.getElementById('gmFrames'); frames.innerHTML=''; window._gifFrameFiles.forEach((f,i)=>{ const url=URL.createObjectURL(f); frames.innerHTML+=`<div style="position:relative"><img src="${url}" style="width:80px;height:60px;object-fit:cover;border-radius:6px;border:2px solid var(--border2)"><span style="position:absolute;top:2px;left:4px;font-size:.6rem;color:white;background:rgba(0,0,0,.6);padding:1px 4px;border-radius:3px">${i+1}</span></div>`; }); }; }
   },
 
   'gif-to-video': {
     title:'GIF to Video Converter', cat:'File Tools', catLink:'#file-tools',
     desc:'Convert animated GIF files into MP4 or WebM video for web use.',
-    render: () => `<div class="tool-box"><h3>Upload GIF File</h3><div class="drop-zone" onclick="document.getElementById('gtvIn').click()"><div class="drop-icon">🎞️→🎬</div><div class="drop-text"><strong>Click to upload GIF</strong></div><input type="file" id="gtvIn" accept=".gif,image/gif" style="display:none" onchange="loadGTV(this)"></div><div id="gtvPreview" style="margin-top:1rem"></div><div style="margin-top:.8rem"><label>Output Format</label><select id="gtvFmt"><option value="mp4">MP4</option><option value="webm">WebM</option></select></div><div class="btn-row"><button class="btn" onclick="showComingSoon('GIF to Video')"><i class="fas fa-exchange-alt"></i> Convert to Video</button></div><div class="notice" style="margin-top:1rem">🔌 Use <a href="https://ezgif.com/gif-to-mp4" target="_blank" style="color:var(--accent)">ezgif.com/gif-to-mp4</a> for free conversion.</div></div>`,
-    init: () => { window.loadGTV = (input) => { const file=input.files[0]; if(!file) return; const url=URL.createObjectURL(file); document.getElementById('gtvPreview').innerHTML=`<img src="${url}" style="max-width:100%;border-radius:8px;max-height:200px">`; }; }
+    render: () => `<div class="tool-box"><h3>Upload GIF File</h3><div class="drop-zone" onclick="document.getElementById('gtvIn').click()"><div class="drop-icon">🎞️→🎬</div><div class="drop-text"><strong>Click to upload GIF</strong></div><input type="file" id="gtvIn" accept=".gif,image/gif" style="display:none" onchange="loadGTV(this)"></div><div id="gtvPreview" style="margin-top:1rem"></div><div style="margin-top:.8rem"><label>Output Format</label><select id="gtvFmt"><option value="mp4">MP4</option><option value="webm">WebM</option></select></div><div class="btn-row"><button class="btn" onclick="gifToVideo()"><i class="fas fa-exchange-alt"></i> Convert to Video</button></div><div id="gtvResult" style="margin-top:1rem"></div><div class="notice" style="margin-top:.5rem">✅ 100% browser — uses Canvas + MediaRecorder.</div></div>`,
+    init: () => {
+      window.loadGTV = (input) => { const file=input.files[0]; if(!file) return; const url=URL.createObjectURL(file); document.getElementById('gtvPreview').innerHTML=`<img src="${url}" style="max-width:100%;border-radius:8px;max-height:200px">`; window._gtvSrc=url; };
+      window.gifToVideo = async () => {
+        if(!window._gtvSrc){ alert('Upload a GIF first'); return; }
+        const res = document.getElementById('gtvResult');
+        res.innerHTML = '<div class="notice">⏳ Converting GIF frames to video...</div>';
+        const img = new Image(); img.src = window._gtvSrc;
+        await new Promise(r=>img.onload=r);
+        const canvas = document.createElement('canvas'); canvas.width=img.width; canvas.height=img.height;
+        const ctx = canvas.getContext('2d');
+        const mimeType = document.getElementById('gtvFmt').value==='mp4' ? (MediaRecorder.isTypeSupported('video/mp4')?'video/mp4':'video/webm') : 'video/webm';
+        const stream = canvas.captureStream(15);
+        const chunks = []; const mr = new MediaRecorder(stream, {mimeType, videoBitsPerSecond:2000000});
+        mr.ondataavailable = e => { if(e.data.size) chunks.push(e.data); };
+        mr.onstop = () => {
+          const blob = new Blob(chunks, {type:mimeType});
+          const ext = mimeType.includes('mp4')?'mp4':'webm';
+          const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`gif_video.${ext}`; a.click();
+          res.innerHTML = `<div class="notice">✅ Converted! (${(blob.size/1024).toFixed(0)} KB) — download started.</div>`;
+        };
+        mr.start();
+        ctx.drawImage(img, 0, 0);
+        // Play for 3s to capture the GIF animation
+        setTimeout(() => mr.stop(), 3000);
+      };
+    }
   },
 };
 
@@ -2392,6 +2634,247 @@ window.showFileName = (input, targetId) => {
 };
 
 window.showComingSoon = (name) => { showToast(`${name} — Backend required. Connect your API to enable this feature.`, 3000); };
+
+// ── FIX: copyEl moved to global scope (was only in password-gen init)
+window.copyEl = (id) => {
+  const t = document.getElementById(id)?.textContent || '';
+  navigator.clipboard.writeText(t).then(() => showToast('Copied!'));
+};
+
+// ── FIX: compressImage + processCompress (Image Compressor was broken)
+window.processCompress = (file) => {
+  if(!file) return;
+  const q = (parseInt(document.getElementById('qualSlider')?.value) || 75) / 100;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = img.width; c.height = img.height;
+      c.getContext('2d').drawImage(img, 0, 0);
+      const mime = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+      const data = c.toDataURL(mime, q);
+      const origKB = (file.size / 1024).toFixed(1);
+      const newKB = ((data.length * 3 / 4) / 1024).toFixed(1);
+      const saved = Math.max(0, (((file.size - newKB * 1024) / file.size) * 100).toFixed(0));
+      document.getElementById('compressOut').innerHTML =
+        `<div class="stats-row" style="margin-bottom:1rem">
+          <div class="stat-box"><div class="stat-val">${origKB} KB</div><div class="stat-lbl">Original</div></div>
+          <div class="stat-box"><div class="stat-val" style="color:var(--accent)">${newKB} KB</div><div class="stat-lbl">Compressed</div></div>
+          <div class="stat-box"><div class="stat-val" style="color:#68D391">${saved}%</div><div class="stat-lbl">Saved</div></div>
+        </div>
+        <img src="${data}" style="max-width:100%;border-radius:8px;margin-bottom:1rem">
+        <div class="btn-row"><a href="${data}" download="compressed.${mime==='image/png'?'png':'jpg'}" class="btn">⬇ Download</a></div>`;
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+};
+window.compressImage = (input) => {
+  const file = input ? input.files[0] : document.getElementById('imgInput')?.files[0];
+  if(!file) { alert('Please upload an image first'); return; }
+  window.processCompress(file);
+};
+
+// ── FIX: previewResize — show image preview + auto-fill dimensions
+window.previewResize = (input) => {
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      document.getElementById('rW').value = img.width;
+      document.getElementById('rH').value = img.height;
+      const prev = document.getElementById('resizeResult');
+      if(prev) prev.innerHTML = `<img src="${e.target.result}" style="max-width:100%;max-height:150px;border-radius:8px;margin-top:.5rem;opacity:.6"> <div style="font-size:.75rem;color:var(--muted);margin-top:.3rem">Original: ${img.width}×${img.height}px</div>`;
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+};
+
+// ── FIX: loadSharpImage — store source for sharpening
+window._sharpSrc = null;
+window.loadSharpImage = (input) => {
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => { window._sharpSrc = e.target.result; };
+  reader.readAsDataURL(file);
+};
+
+// ── FIX: applySharpen — real convolution sharpening kernel
+window.applySharpen = () => {
+  if(!window._sharpSrc) { alert('Please upload an image first'); return; }
+  const amount = (parseInt(document.getElementById('sharpR')?.value) || 50) / 100;
+  const img = new Image();
+  img.onload = () => {
+    const c = document.createElement('canvas');
+    c.width = img.width; c.height = img.height;
+    const ctx = c.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    const imageData = ctx.getImageData(0, 0, c.width, c.height);
+    const d = imageData.data;
+    const w = c.width, h = c.height;
+    const src = new Uint8ClampedArray(d);
+    const k = amount;
+    // Unsharp mask kernel: center boost, subtract neighbors
+    const kernel = [0, -k, 0, -k, 1 + 4 * k, -k, 0, -k, 0];
+    for(let y = 1; y < h - 1; y++) {
+      for(let x = 1; x < w - 1; x++) {
+        const i = (y * w + x) * 4;
+        for(let c2 = 0; c2 < 3; c2++) {
+          d[i+c2] = Math.min(255, Math.max(0,
+            kernel[0]*src[((y-1)*w+(x-1))*4+c2] + kernel[1]*src[((y-1)*w+x)*4+c2] + kernel[2]*src[((y-1)*w+(x+1))*4+c2] +
+            kernel[3]*src[(y*w+(x-1))*4+c2]     + kernel[4]*src[i+c2]              + kernel[5]*src[(y*w+(x+1))*4+c2] +
+            kernel[6]*src[((y+1)*w+(x-1))*4+c2] + kernel[7]*src[((y+1)*w+x)*4+c2] + kernel[8]*src[((y+1)*w+(x+1))*4+c2]
+          ));
+        }
+      }
+    }
+    ctx.putImageData(imageData, 0, 0);
+    const data = c.toDataURL('image/png');
+    document.getElementById('sharpResult').innerHTML =
+      `<img src="${data}" style="max-width:100%;border-radius:8px">
+       <br><a href="${data}" download="sharpened.png" class="btn" style="margin-top:1rem;display:inline-flex">Download</a>`;
+  };
+  img.src = window._sharpSrc;
+};
+
+// ── FIX: Screenshot to PDF — convert uploaded images to PDF (uses pdf-lib)
+window.screenshotsToPDF = (input) => {
+  const files = Array.from(input.files);
+  if(!files.length) return;
+  const res = document.getElementById('s2pResult');
+  res.innerHTML = '<div class="notice">⏳ Building PDF...</div>';
+  loadPDFLib(async () => {
+    try {
+      const { PDFDocument } = PDFLib;
+      const pdf = await PDFDocument.create();
+      for(const file of files) {
+        const ab = await file.arrayBuffer();
+        let img;
+        if(file.type === 'image/png') { img = await pdf.embedPng(ab); }
+        else { img = await pdf.embedJpg(ab); }
+        const page = pdf.addPage([img.width, img.height]);
+        page.drawImage(img, { x: 0, y: 0, width: img.width, height: img.height });
+      }
+      const bytes = await pdf.save();
+      const blob = new Blob([bytes], { type: 'application/pdf' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'screenshots.pdf';
+      a.click();
+      res.innerHTML = `<div class="notice">✅ PDF created from ${files.length} image(s) — download started!</div>`;
+    } catch(e) { res.innerHTML = `<div class="notice">❌ ${e.message}</div>`; }
+  });
+};
+
+// ── FIX: GIF Maker — using gif.js library
+window.makeGIF = () => {
+  const files = window._gifFrameFiles;
+  if(!files || !files.length) { alert('Upload at least 2 images first'); return; }
+  const res = document.getElementById('gmResult');
+  res.innerHTML = '<div class="notice">⏳ Loading gif.js...</div>';
+  const delay = parseInt(document.getElementById('gmDelay')?.value) || 200;
+  const loopVal = parseInt(document.getElementById('gmLoop')?.value) || 0;
+  const loadGifJS = (cb) => {
+    if(window.GIF) { cb(); return; }
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js';
+    s.onload = cb;
+    s.onerror = () => { res.innerHTML = '<div class="notice">❌ Could not load gif.js. Try <a href="https://ezgif.com/maker" target="_blank" style="color:var(--accent)">ezgif.com/maker</a></div>'; };
+    document.head.appendChild(s);
+  };
+  loadGifJS(() => {
+    res.innerHTML = '<div class="notice">⏳ Creating GIF frames...</div>';
+    const imgs = [];
+    let loaded = 0;
+    files.forEach((file, i) => {
+      const img = new Image();
+      img.onload = () => {
+        imgs[i] = img;
+        loaded++;
+        if(loaded === files.length) {
+          const maxW = Math.max(...imgs.map(im => im.width));
+          const maxH = Math.max(...imgs.map(im => im.height));
+          const gif = new GIF({ workers: 2, quality: 10, width: maxW, height: maxH, repeat: loopVal });
+          imgs.forEach(im => {
+            const c = document.createElement('canvas');
+            c.width = maxW; c.height = maxH;
+            c.getContext('2d').drawImage(im, 0, 0, maxW, maxH);
+            gif.addFrame(c, { delay });
+          });
+          gif.on('finished', blob => {
+            const url = URL.createObjectURL(blob);
+            res.innerHTML = `<div class="notice">✅ GIF created (${(blob.size/1024).toFixed(0)} KB)!</div>
+              <img src="${url}" style="max-width:100%;border-radius:8px;margin-top:.8rem">
+              <div class="btn-row" style="margin-top:1rem"><a href="${url}" download="animation.gif" class="btn">⬇ Download GIF</a></div>`;
+          });
+          gif.render();
+          res.innerHTML = '<div class="notice">⏳ Rendering GIF... please wait</div>';
+        }
+      };
+      img.src = URL.createObjectURL(file);
+    });
+  });
+};
+
+// ── FIX: MP3 Cutter — real Web Audio API implementation
+window.cutMP3 = async () => {
+  const input = document.getElementById('mpIn');
+  const file = input?.files[0];
+  if(!file) { alert('Upload an MP3 file first'); return; }
+  const res = document.getElementById('mpCutResult') || (() => {
+    const d = document.createElement('div'); d.id = 'mpCutResult';
+    document.getElementById('mpPlayer')?.after(d); return d;
+  })();
+  res.innerHTML = '<div class="notice">⏳ Cutting audio...</div>';
+  const start = parseFloat(document.getElementById('mpStart')?.value) || 0;
+  const end = parseFloat(document.getElementById('mpEnd')?.value) || 30;
+  if(end <= start) { res.innerHTML = '<div class="notice">❌ End time must be after start time.</div>'; return; }
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const ab = await file.arrayBuffer();
+    const audioBuffer = await ctx.decodeAudioData(ab);
+    const sampleRate = audioBuffer.sampleRate;
+    const channels = audioBuffer.numberOfChannels;
+    const startSample = Math.floor(start * sampleRate);
+    const endSample = Math.min(Math.floor(end * sampleRate), audioBuffer.length);
+    const length = endSample - startSample;
+    if(length <= 0) { res.innerHTML = '<div class="notice">❌ Invalid time range.</div>'; return; }
+    const newBuffer = ctx.createBuffer(channels, length, sampleRate);
+    for(let ch = 0; ch < channels; ch++) {
+      const srcData = audioBuffer.getChannelData(ch).slice(startSample, endSample);
+      newBuffer.copyToChannel(srcData, ch);
+    }
+    // Encode to WAV
+    const wavBlob = bufferToWav(newBuffer);
+    const url = URL.createObjectURL(wavBlob);
+    res.innerHTML = `<div class="notice">✅ Cut: ${start}s – ${end}s (${(end-start).toFixed(1)}s)</div>
+      <audio controls style="width:100%;margin-top:.5rem"><source src="${url}"></audio>
+      <div class="btn-row" style="margin-top:.8rem"><a href="${url}" download="cut_audio.wav" class="btn">⬇ Download WAV</a></div>`;
+  } catch(e) { res.innerHTML = `<div class="notice">❌ ${e.message}. Try <a href="https://mp3cut.net" target="_blank" style="color:var(--accent)">mp3cut.net</a></div>`; }
+};
+
+function bufferToWav(buffer) {
+  const numCh = buffer.numberOfChannels;
+  const sampleRate = buffer.sampleRate;
+  const length = buffer.length;
+  const arrayBuffer = new ArrayBuffer(44 + length * numCh * 2);
+  const view = new DataView(arrayBuffer);
+  const writeStr = (offset, str) => { for(let i=0;i<str.length;i++) view.setUint8(offset+i, str.charCodeAt(i)); };
+  writeStr(0,'RIFF'); view.setUint32(4, 36 + length*numCh*2, true); writeStr(8,'WAVE');
+  writeStr(12,'fmt '); view.setUint32(16,16,true); view.setUint16(20,1,true);
+  view.setUint16(22,numCh,true); view.setUint32(24,sampleRate,true);
+  view.setUint32(28,sampleRate*numCh*2,true); view.setUint16(32,numCh*2,true);
+  view.setUint16(34,16,true); writeStr(36,'data'); view.setUint32(40,length*numCh*2,true);
+  let offset = 44;
+  for(let i=0;i<length;i++) for(let ch=0;ch<numCh;ch++) {
+    const s = Math.max(-1,Math.min(1,buffer.getChannelData(ch)[i]));
+    view.setInt16(offset, s<0?s*0x8000:s*0x7FFF, true); offset+=2;
+  }
+  return new Blob([arrayBuffer], {type:'audio/wav'});
+}
 
 function showToast(msg, dur=2000) {
   let t = document.getElementById('toast');
@@ -2577,6 +3060,233 @@ function renderTool() {
     try { tool.init(); } catch(e) { console.warn('Tool init error:', e); }
   }
 }
+
+// ══════════════════════════════════════════════
+// SOCIAL MEDIA DOWNLOADERS
+// ══════════════════════════════════════════════
+
+// Shared: copy URL field to clipboard
+window.socialCopy = (fieldId) => {
+  const val = document.getElementById(fieldId)?.value?.trim();
+  if(!val){ showToast('Please enter a URL first'); return; }
+  navigator.clipboard.writeText(val).then(()=>showToast('URL copied to clipboard!'));
+};
+
+// Card-based service launcher (Instagram, Twitter, Facebook)
+function socialServiceCards(platform, url){
+  const encoded = encodeURIComponent(url);
+  const configs = {
+    ig: {
+      icon:'fab fa-instagram', color:'#e1306c',
+      title:'Instagram Downloader',
+      tip:'Paste your URL into the service that opens. URL has been copied to clipboard.',
+      services:[
+        { name:'SnapInsta', url:`https://snapinsta.app/`, note:'Photos & Reels' },
+        { name:'InSaver',   url:`https://insaver.app/`,  note:'HD Quality' },
+        { name:'SaveIG',    url:`https://saveig.app/`,   note:'Stories & Posts' },
+      ]
+    },
+    tw: {
+      icon:'fab fa-x-twitter', color:'#1da1f2',
+      title:'Twitter / X Downloader',
+      tip:'Paste your tweet URL in the service that opens.',
+      services:[
+        { name:'TWDown',        url:`https://twdown.net/`,               note:'Videos & GIFs' },
+        { name:'SaveTweetVid',  url:`https://savetweetvid.com/`,         note:'Multiple formats' },
+        { name:'Twitter Video', url:`https://twittervideodownloader.com/`,note:'HD/SD options' },
+      ]
+    },
+    fb: {
+      icon:'fab fa-facebook', color:'#1877f2',
+      title:'Facebook Video Downloader',
+      tip:'Paste your Facebook video URL in the service that opens.',
+      services:[
+        { name:'FDown',       url:`https://fdown.net/`,        note:'HD & SD' },
+        { name:'GetFVid',     url:`https://www.getfvid.com/`,  note:'Fast & Free' },
+        { name:'FB Downloader', url:`https://fbdownloader.app/`, note:'No signup' },
+      ]
+    }
+  };
+  const c = configs[platform];
+  if(!c) return;
+  // Auto-copy URL
+  navigator.clipboard.writeText(url).catch(()=>{});
+
+  return `
+  <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:12px;padding:1.2rem">
+    <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.8rem">
+      <i class="${c.icon}" style="font-size:1.3rem;color:${c.color}"></i>
+      <span style="font-family:'Space Mono',monospace;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--text)">${c.title}</span>
+    </div>
+    <div class="notice" style="margin-bottom:1rem;padding:.7rem 1rem">
+      <i class="fas fa-check-circle" style="color:var(--accent)"></i>
+      <strong style="color:var(--accent)"> URL copied!</strong> ${c.tip}
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem">
+      ${c.services.map(s=>`
+      <a href="${s.url}" target="_blank" rel="noopener"
+         style="background:var(--card-bg);border:1px solid var(--border2);border-radius:8px;padding:.85rem .7rem;
+                text-align:center;text-decoration:none;color:var(--text);transition:all .2s;display:block"
+         onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'"
+         onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text)'">
+        <div style="font-family:'Space Mono',monospace;font-size:.7rem;font-weight:700;margin-bottom:.25rem">${s.name}</div>
+        <div style="font-size:.68rem;color:var(--text-dim)">${s.note}</div>
+        <div style="margin-top:.5rem;font-size:.65rem;color:var(--accent)"><i class="fas fa-external-link-alt"></i> Open</div>
+      </a>`).join('')}
+    </div>
+  </div>`;
+}
+
+window.socialLaunch = (platform) => {
+  const ids = {ig:'igUrl', tw:'twUrl', fb:'fbUrl'};
+  const resIds = {ig:'igResult', tw:'twResult', fb:'fbResult'};
+  const url = document.getElementById(ids[platform])?.value?.trim();
+
+  const validators = {
+    ig: u => /instagram\.com\/(p|reel|tv|stories)\//.test(u),
+    tw: u => /(twitter\.com|x\.com)\/.+\/status\/\d+/.test(u),
+    fb: u => /facebook\.com\/(watch|videos|\?v=)/.test(u) || /fb\.watch/.test(u)
+  };
+  const hints = {
+    ig: 'instagram.com/p/... or /reel/...',
+    tw: 'twitter.com/user/status/123 or x.com/...',
+    fb: 'facebook.com/watch?v=... or /videos/...'
+  };
+
+  const res = document.getElementById(resIds[platform]);
+  if(!url){ showToast('Please enter a URL first'); return; }
+  if(!validators[platform](url)){
+    res.innerHTML = `<div class="notice" style="border-color:rgba(255,107,53,.4)">
+      ⚠️ URL format looks incorrect. Expected: <strong>${hints[platform]}</strong>
+    </div>`;
+    return;
+  }
+  res.innerHTML = socialServiceCards(platform, url) || '';
+  // Open best service automatically
+  const bestUrls = {ig:'https://snapinsta.app/', tw:'https://twdown.net/', fb:'https://fdown.net/'};
+  window.open(bestUrls[platform], '_blank', 'noopener');
+};
+
+// ── TIKTOK: real API via tikwm.com (CORS-enabled, free, no key)
+window.tiktokDownload = async () => {
+  const url = document.getElementById('ttUrl')?.value?.trim();
+  const res  = document.getElementById('ttResult');
+  const btn  = document.getElementById('ttBtn');
+
+  if(!url){ showToast('Please enter a TikTok URL'); return; }
+  if(!/tiktok\.com|vm\.tiktok\.com/.test(url)){
+    res.innerHTML=`<div class="notice" style="border-color:rgba(255,107,53,.4)">⚠️ Please enter a valid TikTok URL (tiktok.com or vm.tiktok.com)</div>`;
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Fetching...';
+  res.innerHTML = `<div class="notice">⏳ Fetching video info from TikTok...</div>`;
+
+  try {
+    const api = await fetch('https://www.tikwm.com/api/', {
+      method:'POST',
+      headers:{'Content-Type':'application/x-www-form-urlencoded','Accept':'application/json'},
+      body:`url=${encodeURIComponent(url)}&hd=1`
+    });
+    const json = await api.json();
+
+    if(json.code !== 0 || !json.data){
+      throw new Error(json.msg || 'Could not fetch video');
+    }
+
+    const d = json.data;
+    const cover = d.cover || d.origin_cover || '';
+    const noWm  = d.play  || '';
+    const withWm= d.wmplay || '';
+    const music = d.music  || '';
+    const title = (d.title||'TikTok Video').substring(0,80);
+    const author= d.author?.nickname || '';
+    const likes = d.digg_count ? `${(d.digg_count/1000).toFixed(1)}K ❤️` : '';
+    const plays = d.play_count ? `${(d.play_count/1000).toFixed(1)}K ▶` : '';
+
+    res.innerHTML = `
+    <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:12px;padding:1.2rem">
+      <div style="display:flex;gap:1rem;align-items:flex-start;margin-bottom:1rem">
+        ${cover ? `<img src="${cover}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;flex-shrink:0" onerror="this.style.display='none'">` : ''}
+        <div>
+          <div style="font-size:.88rem;font-weight:600;color:var(--text);margin-bottom:.3rem;line-height:1.4">${title}</div>
+          ${author ? `<div style="font-size:.75rem;color:var(--text-dim)">@${author}</div>` : ''}
+          <div style="font-size:.72rem;color:var(--muted);margin-top:.3rem">${plays} &nbsp; ${likes}</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr${music?` 1fr`:''};gap:.75rem">
+        ${noWm ? `<a href="${noWm}" download="tiktok_nowatermark.mp4" target="_blank"
+           style="background:var(--accent);color:var(--bg);border-radius:8px;padding:.85rem;text-align:center;
+                  text-decoration:none;font-family:'Space Mono',monospace;font-size:.7rem;font-weight:700;
+                  display:block;transition:all .2s"
+           onmouseover="this.style.background='#eeff44'" onmouseout="this.style.background='var(--accent)'">
+           <i class="fas fa-download"></i><br>No Watermark
+        </a>` : ''}
+        ${withWm ? `<a href="${withWm}" download="tiktok_watermark.mp4" target="_blank"
+           style="background:var(--card-bg);border:1px solid var(--border2);color:var(--text);border-radius:8px;
+                  padding:.85rem;text-align:center;text-decoration:none;font-family:'Space Mono',monospace;
+                  font-size:.7rem;font-weight:700;display:block;transition:all .2s"
+           onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)'">
+           <i class="fab fa-tiktok"></i><br>With Watermark
+        </a>` : ''}
+        ${music ? `<a href="${music}" download="tiktok_audio.mp3" target="_blank"
+           style="background:var(--card-bg);border:1px solid var(--border2);color:var(--text);border-radius:8px;
+                  padding:.85rem;text-align:center;text-decoration:none;font-family:'Space Mono',monospace;
+                  font-size:.7rem;font-weight:700;display:block;transition:all .2s"
+           onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)'">
+           <i class="fas fa-music"></i><br>Audio Only
+        </a>` : ''}
+      </div>
+      <div class="notice" style="margin-top:.8rem;font-size:.75rem">
+        ✅ <strong>Powered by tikwm.com free API.</strong> If download doesn't start, right-click → Save Video As.
+      </div>
+    </div>`;
+  } catch(err){
+    res.innerHTML = `
+    <div class="notice" style="border-color:rgba(255,107,53,.4)">
+      ⚠️ <strong>API could not fetch this video.</strong> ${err.message}<br><br>
+      Try these alternatives:<br>
+      <a href="https://snaptik.app" target="_blank" style="color:var(--accent)">SnapTik.app</a> &nbsp;|&nbsp;
+      <a href="https://ssstik.io" target="_blank" style="color:var(--accent)">ssstik.io</a> &nbsp;|&nbsp;
+      <a href="https://musicaldown.com" target="_blank" style="color:var(--accent)">musicaldown.com</a>
+    </div>`;
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fas fa-download"></i> Fetch Video';
+  }
+};
+
+// ══════════════════════════════════════════════
+// THEME TOGGLE (Dark / Light Mode)
+// ══════════════════════════════════════════════
+(function(){
+  const btn  = document.getElementById('themeToggle');
+  const icon = document.getElementById('themeIcon');
+  const KEY  = 'alltoolhub-theme';
+
+  function applyTheme(mode){
+    if(mode === 'light'){
+      document.body.classList.add('light-mode');
+      if(icon){ icon.className = 'fas fa-sun theme-icon'; icon.style.color='#f5a623'; }
+    } else {
+      document.body.classList.remove('light-mode');
+      if(icon){ icon.className = 'fas fa-moon theme-icon'; icon.style.color=''; }
+    }
+    localStorage.setItem(KEY, mode);
+  }
+
+  // Load saved preference
+  const saved = localStorage.getItem(KEY) || 'dark';
+  applyTheme(saved);
+
+  if(btn){
+    btn.addEventListener('click', function(){
+      const isLight = document.body.classList.contains('light-mode');
+      applyTheme(isLight ? 'dark' : 'light');
+    });
+  }
+})();
 
 // Run on page load — works for both server and file:// protocol
 if(document.readyState === 'loading') {
